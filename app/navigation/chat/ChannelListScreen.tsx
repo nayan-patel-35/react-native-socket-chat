@@ -36,8 +36,6 @@ const ChannelListScreen = (props: any) => {
       <ChannelListComponent
         data={channelList}
         onPress={item => {
-          global.selectedChannelItem = item;
-          console.log('ITME', JSON.stringify(item));
           props.navigation.navigate('ChatMessageListScreen', {item: item});
         }}
       />

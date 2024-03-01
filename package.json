@@ -1,20 +1,7 @@
 {
-  "name": "react-native-socket-chat",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nayan-patel-35/react-native-socket-chat.git"
-  },
+  "name": "socket",
   "version": "0.0.1",
-  "description": "This project is the react-native packaging of react-native-socket-chat.",
-  "main": "index.js",
-   "keywords": [
-    "react-native",
-    "sockt-chat",
-    "socket.io",
-    "socket"
-  ],
-  "author": "Chirag Makwana",
-  "license": "",
+  "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",

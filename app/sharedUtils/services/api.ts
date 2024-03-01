@@ -24,8 +24,6 @@ export const isLoggedInRequest = async () => {
 
 export const loginRequest = async (email: string, password: string) => {
   return new Promise((resolve, reject) => {
-    console.log('formDataCheckStepperRedirection', email, password);
-
     let url = `${PMS_BASE_URL}auth/login`;
 
     const raw = JSON.stringify({

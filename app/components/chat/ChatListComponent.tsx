@@ -31,8 +31,6 @@ const ChatListComponent = ({
   onPress,
   children,
 }: ChatListComponentProps) => {
-  console.log('ChatListComponent', JSON.stringify(item));
-  //👇🏻 Retrieves the last message in the array from the item prop
   useLayoutEffect(() => {
     renderLastMessage();
   }, []);

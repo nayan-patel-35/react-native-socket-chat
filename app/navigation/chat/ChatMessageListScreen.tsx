@@ -57,11 +57,30 @@ const ChatMessageListScreen = (props: any) => {
     Keyboard.addListener('keyboardDidHide', _keyboardDidHide);
   }, [keyboardHeight]);
 
+  const getMessageListAPICall = () => {
+    getMessageListRequest(item?.channelId)
+      .then((response: any) => {
+        if (response?.success) {
+          setMessageList(
+            response?.data?.length > 0 ? response?.data?.reverse() : [],
+          );
+        }
+      })
+      .catch((error: any) => {});
+  };
+
   useEffect(() => {
     if (!isEmpty(global.socketData)) {
       setChannel(global.socketData);
 
-      global.socketData && global.socketData.emit('join chat', item?._id);
+      if (isEmpty(item?.channelId) && global.socketData) {
+        global.socketData.emit('join chat', item?._id);
+      }
+
+      if (!isEmpty(item?.channelId) && global.socketData) {
+        getMessageListAPICall();
+      }
+
       if (global.socketData?.connected) {
         global.socketData.on('start typing', data => {
           setIsTyping(true);
@@ -70,30 +89,12 @@ const ChatMessageListScreen = (props: any) => {
           setIsTyping(false);
         });
       }
+
       global.socketData.on('message', async data => {
-        console.log('data', data);
-        let tempMessageList = [...messageList];
-        tempMessageList.push({tempMessageList, ...data?.newMsg});
-        setMessageList(tempMessageList);
+        setMessageList(prevMessageList => [...prevMessageList, data?.newMsg]);
       });
     }
-    getMessageListAPICall();
   }, []);
-
-  const getMessageListAPICall = () => {
-    getMessageListRequest(item?.channelId)
-      .then((response: any) => {
-        // console.log('getMessageListRequestRes', JSON.stringify(response));
-        if (response?.success) {
-          setMessageList(
-            response?.data?.length > 0 ? response?.data?.reverse() : [],
-          );
-        }
-      })
-      .catch((error: any) => {
-        console.log('getMessageListRequestCatch', JSON.stringify(error));
-      });
-  };
 
   const _keyboardDidShow = (e: any) => {
     setKeyboardHeight(e.endCoordinates.height);
@@ -117,20 +118,41 @@ const ChatMessageListScreen = (props: any) => {
   };
 
   const _onPressSend = () => {
+    let toUserId = item?.members?.filter((item: any, index: number) => {
+      return item?._id != global.currentUserData?.data?._id;
+    });
+
     if (!isEmpty(sendMsgText?.toString()?.trim())) {
       const data = {
         content: sendMsgText,
         messageType: 'Chat',
         status: 'online',
         // isSystem: false,
-        user: item?._id,
+        user: toUserId?.[0]?._id,
         sender: global.currentUserData?.data?._id,
-        to: item?._id,
+        to: toUserId?.[0]?._id,
         from: global.currentUserData?.data?._id,
         channelId: item?.channelId,
         type: 'channel',
       };
       channel?.emit('message', data);
+
+      const tempData = {
+        content: sendMsgText,
+        messageType: 'Chat',
+        status: 'online',
+        // isSystem: false,
+        user: toUserId?.[0]?._id,
+        sender: {
+          _id: global.currentUserData?.data?._id,
+          updatedAt: new Date(),
+        },
+        to: toUserId?.[0]?._id,
+        from: global.currentUserData?.data?._id,
+        channelId: item?.channelId,
+        type: 'channel',
+      };
+      setMessageList(prevMessageList => [...prevMessageList, tempData]);
       setSendMsgText('');
       setTimeout(() => {
         startStopTyping('stop typing');
@@ -148,7 +170,6 @@ const ChatMessageListScreen = (props: any) => {
   };
 
   const _onBackPress = () => {
-    console.log('Press');
     props?.navigation?.goBack();
   };
 
