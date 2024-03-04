@@ -1,9 +1,10 @@
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
-import LoginScreen from './auth/LoginScreen';
-import ChannelListScreen from './chat/ChannelListScreen';
-import ChatMessageListScreen from './chat/ChatMessageListScreen';
-import SplashScreen from './SplashScreen';
+import { NavigationContainer } from "@react-navigation/native";
+import {
+  createStackNavigator,
+  TransitionPresets,
+} from "@react-navigation/stack";
+import ChannelListScreen from "./chat/ChannelListScreen";
+import ChatMessageListScreen from "./chat/ChatMessageListScreen";
 
 export const MAIN_STACK = createStackNavigator();
 
@@ -19,15 +20,14 @@ export const RootNavigator = () => {
           headerMode: false,
           ...TransitionScreenOptions,
         }}
-        initialRouteName={'SplashScreen'}>
-        <MAIN_STACK.Screen name={'SplashScreen'} component={SplashScreen} />
-        <MAIN_STACK.Screen name={'LoginScreen'} component={LoginScreen} />
+        initialRouteName={"ChannelListScreen"}
+      >
         <MAIN_STACK.Screen
-          name={'ChannelListScreen'}
+          name={"ChannelListScreen"}
           component={ChannelListScreen}
         />
         <MAIN_STACK.Screen
-          name={'ChatMessageListScreen'}
+          name={"ChatMessageListScreen"}
           component={ChatMessageListScreen}
         />
       </MAIN_STACK.Navigator>

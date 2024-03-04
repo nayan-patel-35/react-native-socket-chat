@@ -1,5 +1,5 @@
-import index from './app/index';
+// .. context
+export * from "./app/context/index";
 
-module.exports = {
-  index,
-};
+// .. components
+export * from "./app/components/index";
