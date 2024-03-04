@@ -4,7 +4,7 @@
     "type": "git",
     "url": "https://github.com/nayan-patel-35/react-native-socket-chat.git"
   },
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "This project is the react-native packaging of react-native-socket-chat.",
   "main": "index.js",
    "keywords": [
