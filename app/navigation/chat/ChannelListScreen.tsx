@@ -1,10 +1,11 @@
 import {useFocusEffect} from '@react-navigation/native';
 import React, {useCallback, useState} from 'react';
-import {StatusBar, StyleSheet} from 'react-native';
+import {Alert, StatusBar, StyleSheet} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ChannelListComponent from '../../components/chat/ChannelListComponent';
 import {getChannelListRequest} from '../../sharedUtils/services/api';
 import AppColors from '../../utils/AppColors';
+import {isEmpty} from '../../utils/AppConstant';
 
 const ChannelListScreen = (props: any) => {
   // .. state
@@ -30,6 +31,30 @@ const ChannelListScreen = (props: any) => {
       });
   };
 
+  const _onPressLogout = () => {
+    Alert.alert('Come back soon!', 'Are you sure you want to Log out ?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'Confirm',
+        onPress: () => {
+          if (!isEmpty(global.socketData)) {
+            console.log('_onPressLogout', global.socketData?.id);
+            global.socketData.disconnect();
+            setTimeout(() => {
+              props.navigation.reset({
+                index: 0,
+                routes: [{name: 'LoginScreen'}],
+              });
+            }, 500);
+          }
+        },
+      },
+    ]);
+  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle={'dark-content'} backgroundColor={AppColors.white} />
@@ -38,6 +63,7 @@ const ChannelListScreen = (props: any) => {
         onPress={item => {
           props.navigation.navigate('ChatMessageListScreen', {item: item});
         }}
+        onPressLogout={() => _onPressLogout()}
       />
     </SafeAreaView>
   );

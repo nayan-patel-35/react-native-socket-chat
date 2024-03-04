@@ -4,12 +4,6 @@ export const DEVICE_HEIGHT = Dimensions.get('screen').height;
 export const DEVICE_WEIGHT = Dimensions.get('screen').width;
 export const BASE_TOP_IOS = '-20%';
 
-export const PMS_BASE_URL = 'https://app.softwareco.com/backend/';
-
-export const BASE_URL = 'http://192.168.1.147:8080/api/v1/';
-
-export const SOCKET_BASE_URL = 'http://192.168.1.147:8080';
-
 export const DUMMY_AVTAR_URL =
   'https://ant-stream.s3.amazonaws.com/ef3-placeholder-image.webp';
 export const DUMMY_PLACEHOLDER =

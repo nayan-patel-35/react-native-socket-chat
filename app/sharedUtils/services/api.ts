@@ -1,4 +1,7 @@
-import {BASE_URL, PMS_BASE_URL} from '../../utils/AppConstant';
+import Config from 'react-native-config';
+
+const PMS_BASE_URL: string | any = Config.PMS_BASE_URL;
+const BASE_URL: string | any = Config.BASE_URL;
 
 export const isLoggedInRequest = async () => {
   return new Promise((resolve, reject) => {

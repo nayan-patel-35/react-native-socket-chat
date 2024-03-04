@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
-import {ScrollView, StatusBar, StyleSheet} from 'react-native';
+import {Keyboard, ScrollView, StatusBar, StyleSheet} from 'react-native';
+import Config from 'react-native-config';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import {io} from 'socket.io-client';
@@ -12,22 +13,30 @@ import {
   loginRequest,
 } from '../../sharedUtils/services/api';
 import AppColors from '../../utils/AppColors';
-import {SOCKET_BASE_URL, isEmpty} from '../../utils/AppConstant';
+import {isEmpty} from '../../utils/AppConstant';
+
+const CLIENT_ID: string | any = Config.CLIENT_ID;
+const SOCKET_BASE_URL: string | any = Config.SOCKET_BASE_URL;
 
 const LoginScreen = (props: any) => {
   // .. state
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [email, setEmail] = useState<string>('dixitc@softwareco.com');
-  const [password, setPassword] = useState<string>('Dixit123!@#');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   // const [email, setEmail] = useState<string>('jack@mailinator.com');
   // const [password, setPassword] = useState<string>('Jack123!@#');
 
   const _onPressLogin = () => {
+    Keyboard.dismiss();
     setIsLoading(true);
     loginRequest(email, password)
       .then((response: any) => {
         console.log('loginRequestRes', JSON.stringify(response));
         if (response?.success) {
+          Toast.show({
+            type: 'success',
+            text1: response?.message,
+          });
           isLoggedInRequest()
             .then(async (responseIsLoggedIn: any) => {
               console.log(
@@ -38,10 +47,7 @@ const LoginScreen = (props: any) => {
               );
               if (responseIsLoggedIn?.success) {
                 global.currentUserData = responseIsLoggedIn;
-                getTokenRequest(
-                  responseIsLoggedIn?.data?._id,
-                  '65dc614d6c9a06556373bb08',
-                )
+                getTokenRequest(responseIsLoggedIn?.data?._id, CLIENT_ID)
                   .then((responseToken: any) => {
                     setIsLoading(true);
                     console.log(
@@ -52,6 +58,12 @@ const LoginScreen = (props: any) => {
                       global.token = responseToken?.data;
                       console.log('TOKEN', responseToken?.data);
                       socketConnectionRequest(responseToken?.data);
+                    } else {
+                      setIsLoading(false);
+                      Toast.show({
+                        type: 'error',
+                        text1: responseToken?.message,
+                      });
                     }
                   })
                   .catch((error: any) => {
@@ -61,7 +73,16 @@ const LoginScreen = (props: any) => {
                       type: 'error',
                       text1: 'Something went wrong!',
                     });
+                  })
+                  .finally(() => {
+                    setIsLoading(false);
                   });
+              } else {
+                setIsLoading(false);
+                Toast.show({
+                  type: 'error',
+                  text1: responseIsLoggedIn?.message,
+                });
               }
             })
             .catch((error: any) => {
@@ -71,16 +92,27 @@ const LoginScreen = (props: any) => {
                 type: 'error',
                 text1: 'Something went wrong!',
               });
+            })
+            .finally(() => {
+              setIsLoading(false);
             });
+        } else {
+          setIsLoading(false);
+          Toast.show({
+            type: 'error',
+            text1: response?.message,
+          });
         }
       })
       .catch((error: any) => {
         setIsLoading(false);
-        console.log('loginRequestCatch', JSON.stringify(error));
         Toast.show({
           type: 'error',
           text1: 'Something went wrong!',
         });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
@@ -102,8 +134,10 @@ const LoginScreen = (props: any) => {
             index: 0,
             routes: [{name: 'ChannelListScreen'}],
           });
+        } else {
+          setIsLoading(false);
         }
-      }, 600);
+      }, 2500);
     }
   };
 
@@ -124,6 +158,9 @@ const LoginScreen = (props: any) => {
           placeHolderText={'Enter password'}
           value={password}
           setValue={setPassword}
+          returnKeyType={'go'}
+          blurOnSubmit={false}
+          onSubmitEditing={() => _onPressLogin()}
         />
 
         <ThemeBtn

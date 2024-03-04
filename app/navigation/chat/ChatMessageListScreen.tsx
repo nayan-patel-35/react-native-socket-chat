@@ -71,6 +71,7 @@ const ChatMessageListScreen = (props: any) => {
 
   useEffect(() => {
     if (!isEmpty(global.socketData)) {
+      console.log('socketData', global.socketData?.id);
       setChannel(global.socketData);
 
       if (isEmpty(item?.channelId) && global.socketData) {

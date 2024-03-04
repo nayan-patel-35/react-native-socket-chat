@@ -12,6 +12,7 @@ export const Assets = {
   gallery_icon: require('../assets/gallery.png'),
   video_icon: require('../assets/video.png'),
   document_icon: require('../assets/document.png'),
+  logout_icon: require('../assets/logout.png'),
 
   no_chat: require('../assets/no_chat.png'),
   no_internet: require('../assets/no_internet.png'),

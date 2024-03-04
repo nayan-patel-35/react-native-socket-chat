@@ -1,12 +1,15 @@
 import React from 'react';
 import {
   FlatList,
+  Image,
+  Pressable,
   StyleProp,
   StyleSheet,
   Text,
   TextStyle,
   View,
 } from 'react-native';
+import {Assets} from '../../assets';
 import AppColors from '../../utils/AppColors';
 import {DUMMY_PLACEHOLDER, isEmpty} from '../../utils/AppConstant';
 import ChatListComponent from './ChatListComponent';
@@ -17,6 +20,7 @@ interface ChannelListComponentProps {
   headerText?: string;
   titleHeadTextPropsStyle?: StyleProp<TextStyle>;
   horizontal?: boolean;
+  onPressLogout?: () => void;
   onPress?: (item: any, index: number) => void;
 }
 
@@ -59,13 +63,21 @@ const ChannelListComponent = ({
   headerText,
   titleHeadTextPropsStyle,
   horizontal,
+  onPressLogout,
   onPress,
 }: ChannelListComponentProps) => {
   return (
     <View style={styles.container}>
-      <Text style={[styles.titleHeadTextStyle, titleHeadTextPropsStyle]}>
-        {headerText ? headerText : 'Chats'}
-      </Text>
+      <View style={styles.chatHeaderViewStyle}>
+        <Text style={[styles.titleHeadTextStyle, titleHeadTextPropsStyle]}>
+          {headerText ? headerText : 'Chats'}
+        </Text>
+        <Pressable
+          onPress={onPressLogout}
+          hitSlop={{top: 5, bottom: 5, left: 5, right: 5}}>
+          <Image style={{width: 20, height: 20}} source={Assets.logout_icon} />
+        </Pressable>
+      </View>
       <FlatList
         horizontal={horizontal ? horizontal : false}
         data={data?.length > 0 ? data : []}
@@ -87,6 +99,12 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.white,
   },
 
+  chatHeaderViewStyle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+
   titleHeadTextStyle: {
     fontSize: 25,
     lineHeight: 25,
@@ -94,6 +112,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 8,
-    marginHorizontal: 10,
+    flex: 1,
   },
 });
