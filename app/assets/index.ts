@@ -3,6 +3,7 @@ export const Assets = {
   toast_error_icon: require('../assets/toast_error.png'),
   toast_info_icon: require('../assets/toast_info.png'),
   send_blue_icon: require('../assets/send_blue.png'),
+  send_grey_icon: require('../assets/send_grey.png'),
   send_white_icon: require('../assets/send_white.png'),
   attachment_blue_icon: require('../assets/attachment_blue.png'),
   arrow_back_black_icon: require('../assets/arrow_back_black.png'),
