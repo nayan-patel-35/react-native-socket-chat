@@ -1,5 +1,7 @@
-// .. context
-export * from "./app/context/index";
+export * from "./app/context";
+// export * from "./app/navigation";
+export * from "./app/navigation/index.ts";
 
-// .. components
-export * from "./app/components/index";
+// export { default as ChannelListScreen } from './app/navigation/ChannelListScreen';
+// export { default as MessageListScreen } from './app/navigation/MessageListScreen';
+

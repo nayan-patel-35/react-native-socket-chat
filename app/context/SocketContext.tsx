@@ -1,5 +1,10 @@
-import { createContext, useEffect, useState } from "react";
-import { getMessageListRequest } from "../sharedUtils/services/api";
+import moment from 'moment';
+import { createContext, useEffect, useState } from 'react';
+import {
+  getChannelListRequest,
+  getMessageListRequest,
+} from '../sharedUtils/services/api';
+import { SOCKET_EVENT_TYPE } from '../utils/AppConstant';
 
 export const SocketContext = createContext(null);
 
@@ -9,88 +14,128 @@ interface SocketStateProps {
   user: any;
   children?: React.ReactNode;
 }
+
 export const SocketState = ({
   token,
   socketClient,
   user,
   children,
 }: SocketStateProps) => {
+  // Create initial state with props values
   const initialState = {
-    user: user,
+    token,
+    socketClient,
+    user,
+    channelList: [],
     channelsMessagesList: [],
-    socketClient: socketClient,
   };
-  const [state, setState] = useState<any>(initialState);
 
+  const [state, setState] = useState(initialState);
+
+  // Fetch channel list on component mount
   useEffect(() => {
-    if (token) {
-      setState((prevState: any) => ({
-        ...prevState,
-        user: user,
-        socketClient: socketClient,
-      }));
-    }
-  }, [token]);
+      getChannelList();
+  }, []);
 
-  useEffect(() => {
-    if (socketClient) {
-      newMessageListener();
-    }
-  }, [socketClient]);
-
-  const getMessagesList = async (channelId: any) => {
-    getMessageListRequest(channelId)
+  // Fetch channel list from API
+  const getChannelList = () => {
+    getChannelListRequest(user?._id, token)
       .then((response: any) => {
         if (response?.success) {
-          const reverseMessages =
-            response?.data?.length > 0 ? response?.data?.reverse() : [];
-          setState((prevState) => ({
+          setState((prevState: any) => ({
             ...prevState,
-            channelsMessagesList: reverseMessages,
+            channelList: response?.data,
           }));
         }
       })
-      .catch((error: any) => {});
+      .catch(error => {
+        console.log('getChannelListRequestCatch', error);
+      });
   };
 
+  // Fetch messages list for a given channel ID
+  const getMessagesList = async (channelId: any) => {
+    getMessageListRequest(channelId, token)
+      .then((response: any) => {
+        if (response?.success) {
+          const tempMessageList = response?.data?.reverse()?.map((item: any) => ({
+            ...item,
+            list: item?.list?.length > 0 ? item?.list : [],
+          }));
+          setState((prevState: any) => ({
+            ...prevState,
+            channelsMessagesList: tempMessageList,
+          }));
+        }
+      })
+      .catch((error: any) => {
+        console.log('getMessageListRequestCatch', error);
+      });
+  };
+
+  // Append new messages to the channelsMessagesList
   const appendMessages = (newMessages: any) => {
-    let tempMessageList =
-      state?.channelsMessagesList?.length > 0 ? state.channelsMessagesList : [];
+    setState((prevState: any) => {
+      const tempMessageList = prevState?.channelsMessagesList;
+      console.log('appendMessages',tempMessageList?.length)
+      const currentDate = moment(new Date()).format('YYYY-MM-DD');
+      const updatedArray = tempMessageList.filter((data: any) => data.date !== currentDate);
+      const newArray = tempMessageList
+        .filter((data: any) => data.date === currentDate)
+        .map((data: any) => ({
+          ...data,
+          list: data.list ? [...data.list, newMessages] : [newMessages],
+        }));
 
-    const newMessageData = {
-      ...newMessages,
-      sender: {
-        _id: newMessages?.sender,
-        updatedAt: new Date(),
-      },
-    };
-
-    setState((prevState: any) => ({
-      ...prevState,
-      channelsMessagesList: [...tempMessageList, newMessageData],
-    }));
+      return {
+        ...prevState,
+        channelsMessagesList: [...updatedArray, ...newArray],
+      };
+    });
   };
 
-  const newMessageListener = () => {
+  // Listen for incoming messages on the socket
+  const socketOnMessage = () => {
     try {
-      socketClient.on("message", (data) => {
-        let newMessage = data?.newMsg;
-        console.log("newMessageListenerRes", JSON.stringify(data));
-        setState((prevState: any) => ({
-          ...prevState,
-          channelsMessagesList: [
-            ...prevState?.channelsMessagesList,
-            newMessage,
-          ],
-        }));
+      console.log(SOCKET_EVENT_TYPE.MESSAGE);
+      socketClient.on(SOCKET_EVENT_TYPE.MESSAGE, (messageData: any) => {
+        const newMessages = messageData?.newMsg;
+          setState((prevState: any) => {
+            const tempMessageList = prevState?.channelsMessagesList;
+            console.log('socketOnMessage',tempMessageList?.length)
+            const currentDate = moment(new Date()).format('YYYY-MM-DD');
+            const constArray = tempMessageList.map((data: any) => {
+              if (currentDate === data?.date) {
+                return {
+                  ...data,
+                  list: data?.list ? [...data.list, newMessages] : [newMessages],
+                };
+              } else {
+                getMessagesList(newMessages?.channelId);
+                return data; // Return unmodified data for other dates
+              }
+            });
+
+            return {
+              ...prevState,
+              channelsMessagesList: constArray,
+            };
+          });
       });
     } catch (error) {
-      console.log("newMessageListenerCatch", JSON.stringify(error));
+      console.log('newMessageListenerCatch', error);
     }
   };
 
+  // Listen for socket client change
+  useEffect(() => {
+    if (socketClient) {
+      socketOnMessage();
+    }
+  }, [socketClient]);
+
   return (
-    <SocketContext.Provider value={{ state, getMessagesList, appendMessages }}>
+    <SocketContext.Provider value={{ state, getMessagesList, appendMessages, getChannelList }}>
       {children}
     </SocketContext.Provider>
   );

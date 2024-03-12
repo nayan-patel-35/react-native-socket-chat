@@ -1,6 +1,6 @@
 import moment from 'moment';
-import React, {useLayoutEffect} from 'react';
-import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
+import React, { useLayoutEffect } from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import AppColors from '../../utils/AppColors';
 import {
   CHAT_MESSAGE_STRING_TYPE,
@@ -67,10 +67,10 @@ const ChatListComponent = ({
             {channelName}
           </Text>
           <Text style={styles.timeTextStyle} numberOfLines={1}>
-            {item?.updatedAt
-              ? moment(item?.updatedAt).format('YYYY-MM-DD') == today
-                ? moment(item?.updatedAt).format('hh:mm A')
-                : moment(item?.updatedAt).format('DD MMM')
+            {item?.lastMessageAt
+              ? moment(item?.lastMessageAt).format('YYYY-MM-DD') == today
+                ? moment(item?.lastMessageAt).format('hh:mm A')
+                : moment(item?.lastMessageAt).format('DD MMM')
               : ''}
           </Text>
         </View>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Animated, StyleSheet} from 'react-native';
+import { Animated, StyleSheet } from 'react-native';
 import AppColors from '../../../utils/AppColors';
 import TypingAnimation from './TypingAnimation.js';
 

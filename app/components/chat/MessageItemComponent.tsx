@@ -1,4 +1,5 @@
 import Clipboard from '@react-native-clipboard/clipboard';
+import { useContext } from 'react';
 import {
   Image,
   Platform,
@@ -9,31 +10,32 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import Video from 'react-native-video';
-import {Assets} from '../../assets';
+import { Assets } from '../../assets';
+import { SocketContext } from '../../context/SocketContext';
 import AppColors from '../../utils/AppColors';
-import {IsOpenURL, isValidUrl} from '../../utils/AppConstant';
+import { IsOpenURL, isValidUrl } from '../../utils/AppConstant';
 var moment = require('moment');
 const today = moment().format('YYYY-MM-DD');
 
 interface MessageItemComponentProps {
-  item: any;
-  index: number;
-  toUserId?: string;
-  fromUserId?: string;
-  onOpenChatImage?: () => void;
-  onOpenChatVideo?: () => void;
+  props: {
+    item: any;
+    index: number;
+    date:string;
+    toUserId?: string;
+    fromUserId?: string;
+    onOpenChatImage?: () => void;
+    onOpenChatVideo?: () => void;
+  };
 }
 
-const MessageItemComponent = ({
-  item,
-  index,
-  toUserId,
-  fromUserId,
-  onOpenChatImage,
-  onOpenChatVideo,
-}: MessageItemComponentProps) => {
+const MessageItemComponent = ({props}: MessageItemComponentProps) => {
+  const {item, index, date, onOpenChatImage, onOpenChatVideo} =
+    props;
+     const {state: socketState}: any = useContext(SocketContext);
+
   let senderId: string = item?.sender?._id;
-  let currentLoginUserId: string = global.currentUserData?.data?._id;
+  let currentUserId: string = socketState?.user?._id;
 
   let msgNameColor = ['#375BFB', '#5FA857', '#FF734C'];
 
@@ -56,11 +58,11 @@ const MessageItemComponent = ({
         <View
           style={{
             backgroundColor:
-              senderId == currentLoginUserId
+              senderId == currentUserId
                 ? AppColors.silver
                 : AppColors.silver,
             alignSelf:
-              senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+              senderId == currentUserId ? 'flex-end' : 'flex-start',
             padding: 3,
             borderRadius: 8,
           }}>
@@ -75,7 +77,7 @@ const MessageItemComponent = ({
               style={[
                 {
                   alignSelf:
-                    senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                    senderId == currentUserId ? 'flex-end' : 'flex-start',
                 },
                 styles.chatImgVideoStyle,
               ]}
@@ -86,17 +88,17 @@ const MessageItemComponent = ({
           style={{
             flexDirection: 'row',
             alignSelf:
-              senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+              senderId == currentUserId ? 'flex-end' : 'flex-start',
           }}>
           <Text
             style={[
               {
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
               },
               styles.msgTimeTextStyle,
             ]}>
-            {senderId !== currentLoginUserId
+            {senderId !== currentUserId
               ? `${item?.sender?.firstName} ${item?.sender?.lastName}`
               : ''}
           </Text>
@@ -104,7 +106,7 @@ const MessageItemComponent = ({
             style={[
               {
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
                 marginLeft: 5,
               },
               styles.msgTimeTextStyle,
@@ -124,11 +126,11 @@ const MessageItemComponent = ({
         <View
           style={{
             backgroundColor:
-              senderId == currentLoginUserId
+              senderId == currentUserId
                 ? AppColors.silver
                 : AppColors.silver,
             alignSelf:
-              senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+              senderId == currentUserId ? 'flex-end' : 'flex-start',
             padding: 3,
             borderRadius: 8,
           }}>
@@ -137,7 +139,7 @@ const MessageItemComponent = ({
               flexDirection: 'row',
               alignItems: 'center',
               alignSelf:
-                senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                senderId == currentUserId ? 'flex-end' : 'flex-start',
             }}>
             <TouchableOpacity
               disabled={item.type == 'deleted' ? true : false}
@@ -146,7 +148,7 @@ const MessageItemComponent = ({
                 style={[
                   {
                     alignSelf:
-                      senderId == currentLoginUserId
+                      senderId == currentUserId
                         ? 'flex-end'
                         : 'flex-start',
                   },
@@ -163,18 +165,18 @@ const MessageItemComponent = ({
           style={{
             flexDirection: 'row',
             alignSelf:
-              senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+              senderId == currentUserId ? 'flex-end' : 'flex-start',
           }}>
-          {senderId !== currentLoginUserId && (
+          {senderId !== currentUserId && (
             <Text
               style={[
                 {
                   alignSelf:
-                    senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                    senderId == currentUserId ? 'flex-end' : 'flex-start',
                 },
                 styles.msgTimeTextStyle,
               ]}>
-              {senderId !== currentLoginUserId
+              {senderId !== currentUserId
                 ? `${item?.sender?.firstName} ${item?.sender?.lastName}`
                 : ''}
             </Text>
@@ -183,7 +185,7 @@ const MessageItemComponent = ({
             style={[
               {
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
                 marginLeft: 10,
               },
               styles.msgTimeTextStyle,
@@ -206,13 +208,13 @@ const MessageItemComponent = ({
             padding: item?.content ? 0 : 12,
             marginTop: 22,
             alignSelf:
-              senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
-            marginEnd: senderId == currentLoginUserId ? 0 : 50,
-            marginStart: senderId == currentLoginUserId ? 50 : 0,
-            borderBottomLeftRadius: senderId !== currentLoginUserId ? 0 : 16,
-            borderBottomRightRadius: senderId == currentLoginUserId ? 0 : 16,
+              senderId == currentUserId ? 'flex-end' : 'flex-start',
+            marginEnd: senderId == currentUserId ? 0 : 50,
+            marginStart: senderId == currentUserId ? 50 : 0,
+            borderBottomLeftRadius: senderId !== currentUserId ? 0 : 16,
+            borderBottomRightRadius: senderId == currentUserId ? 0 : 16,
             backgroundColor:
-              senderId !== currentLoginUserId || item?.content
+              senderId !== currentUserId || item?.content
                 ? AppColors.white
                 : AppColors.primaryLight,
           },
@@ -220,7 +222,7 @@ const MessageItemComponent = ({
         <View
           style={{
             alignSelf:
-              senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+              senderId == currentUserId ? 'flex-end' : 'flex-start',
             width: '80%',
             flexDirection: 'row',
             marginTop: 8,
@@ -230,15 +232,15 @@ const MessageItemComponent = ({
             style={[
               styles.msgTextStyle,
               {
-                textAlign: senderId == currentLoginUserId ? 'right' : 'left',
+                textAlign: senderId == currentUserId ? 'right' : 'left',
                 paddingHorizontal: item?.content ? 8 : 0,
                 marginBottom: 6,
                 color:
-                  senderId == currentLoginUserId
+                  senderId == currentUserId
                     ? AppColors.white
                     : AppColors.black,
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
               },
             ]}>
             {item.attachments[0]?.file_url?.toString()?.split('/')?.pop()}
@@ -252,7 +254,7 @@ const MessageItemComponent = ({
             justifyContent: 'space-between',
             alignContent: 'center',
           }}>
-          {senderId == currentLoginUserId ? (
+          {senderId == currentUserId ? (
             <TouchableOpacity
             // onPress={() => downloadFiles(item)}
             >
@@ -263,11 +265,11 @@ const MessageItemComponent = ({
             style={[
               {
                 color:
-                  senderId == currentLoginUserId
+                  senderId == currentUserId
                     ? AppColors.white
                     : AppColors.black,
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
               },
               styles.msgTimeTextStyle,
             ]}>
@@ -275,7 +277,7 @@ const MessageItemComponent = ({
               ? moment(item.updatedAt).format('hh:mm A')
               : moment(item.updatedAt).format('hh:mm A DD MMM')}
           </Text>
-          {senderId !== currentLoginUserId ? (
+          {senderId !== currentUserId ? (
             <TouchableOpacity
             // onPress={() => downloadFiles(item)}
             >
@@ -290,6 +292,7 @@ const MessageItemComponent = ({
   const renderTextViewItem = () => {
     return (
       <>
+     
         <TouchableOpacity
           activeOpacity={1}
           onLongPress={() => _onPressCopyMessage(item)}
@@ -299,13 +302,13 @@ const MessageItemComponent = ({
               padding: item?.content ? 0 : 12,
               marginTop: 10,
               alignSelf:
-                senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
-              marginEnd: senderId == currentLoginUserId ? 0 : 50,
-              marginStart: senderId == currentLoginUserId ? 50 : 0,
-              borderBottomLeftRadius: senderId !== currentLoginUserId ? 0 : 18,
-              borderBottomRightRadius: senderId == currentLoginUserId ? 0 : 18,
+                senderId == currentUserId ? 'flex-end' : 'flex-start',
+              marginEnd: senderId == currentUserId ? 0 : 50,
+              marginStart: senderId == currentUserId ? 50 : 0,
+              borderBottomLeftRadius: senderId !== currentUserId ? 0 : 18,
+              borderBottomRightRadius: senderId == currentUserId ? 0 : 18,
               backgroundColor:
-                senderId !== currentLoginUserId
+                senderId !== currentUserId
                   ? AppColors.silver
                   : AppColors.primaryLight,
             },
@@ -316,11 +319,11 @@ const MessageItemComponent = ({
               {
                 paddingHorizontal: item?.content ? 5 : 0,
                 color:
-                  senderId !== currentLoginUserId
+                  senderId !== currentUserId
                     ? AppColors.black
                     : AppColors.white,
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
               },
             ]}>
             {item.content}
@@ -330,18 +333,18 @@ const MessageItemComponent = ({
           style={{
             flexDirection: 'row',
             alignSelf:
-              senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+              senderId == currentUserId ? 'flex-end' : 'flex-start',
           }}>
-          {senderId !== currentLoginUserId && (
+          {senderId !== currentUserId && (
             <Text
               style={[
                 {
                   alignSelf:
-                    senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                    senderId == currentUserId ? 'flex-end' : 'flex-start',
                 },
                 styles.msgTimeTextStyle,
               ]}>
-              {senderId !== currentLoginUserId
+              {senderId !== currentUserId
                 ? `${item?.sender?.firstName} ${item?.sender?.lastName}`
                 : ''}
             </Text>
@@ -350,7 +353,7 @@ const MessageItemComponent = ({
             style={[
               {
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
                 marginLeft: 10,
               },
               styles.msgTimeTextStyle,
@@ -377,13 +380,13 @@ const MessageItemComponent = ({
               padding: item?.content ? 0 : 12,
               marginTop: 10,
               alignSelf:
-                senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
-              marginEnd: senderId == currentLoginUserId ? 0 : 50,
-              marginStart: senderId == currentLoginUserId ? 50 : 0,
-              borderBottomLeftRadius: senderId !== currentLoginUserId ? 0 : 18,
-              borderBottomRightRadius: senderId == currentLoginUserId ? 0 : 18,
+                senderId == currentUserId ? 'flex-end' : 'flex-start',
+              marginEnd: senderId == currentUserId ? 0 : 50,
+              marginStart: senderId == currentUserId ? 50 : 0,
+              borderBottomLeftRadius: senderId !== currentUserId ? 0 : 18,
+              borderBottomRightRadius: senderId == currentUserId ? 0 : 18,
               backgroundColor:
-                senderId !== currentLoginUserId || item?.content
+                senderId !== currentUserId || item?.content
                   ? AppColors.silver
                   : AppColors.primaryLight,
             },
@@ -393,18 +396,18 @@ const MessageItemComponent = ({
               style={[
                 styles.isGroupTextStyle,
                 {
-                  marginLeft: senderId !== currentLoginUserId ? 1 : 0,
+                  marginLeft: senderId !== currentUserId ? 1 : 0,
                   paddingHorizontal: item?.content ? 8 : 0,
                   marginTop: item?.content ? 4 : -2,
                   color:
-                    senderId !== currentLoginUserId
+                    senderId !== currentUserId
                       ? msgNameColor[index % msgNameColor.length]
                       : '#3df249',
                   alignSelf:
-                    senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                    senderId == currentUserId ? 'flex-end' : 'flex-start',
                 },
               ]}>
-              {senderId !== currentLoginUserId
+              {senderId !== currentUserId
                 ? `${item?.sender?.firstName} ${item?.sender?.lastName}`
                 : ''}
             </Text>
@@ -417,13 +420,13 @@ const MessageItemComponent = ({
                 paddingHorizontal: item?.content ? 8 : 2,
                 // marginBottom: 2,
                 color:
-                  senderId == currentLoginUserId && checkIsURLText(item)
+                  senderId == currentUserId && checkIsURLText(item)
                     ? AppColors.urlColor
-                    : senderId !== currentLoginUserId && checkIsURLText(item)
+                    : senderId !== currentUserId && checkIsURLText(item)
                     ? AppColors.urlColor
                     : AppColors.black,
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
               },
             ]}>
             {item.text}
@@ -433,18 +436,18 @@ const MessageItemComponent = ({
           style={{
             flexDirection: 'row',
             alignSelf:
-              senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+              senderId == currentUserId ? 'flex-end' : 'flex-start',
           }}>
-          {senderId !== currentLoginUserId && (
+          {senderId !== currentUserId && (
             <Text
               style={[
                 {
                   alignSelf:
-                    senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                    senderId == currentUserId ? 'flex-end' : 'flex-start',
                 },
                 styles.msgTimeTextStyle,
               ]}>
-              {senderId !== currentLoginUserId
+              {senderId !== currentUserId
                 ? `${item?.sender?.firstName} ${item?.sender?.lastName}`
                 : ''}
             </Text>
@@ -453,7 +456,7 @@ const MessageItemComponent = ({
             style={[
               {
                 alignSelf:
-                  senderId == currentLoginUserId ? 'flex-end' : 'flex-start',
+                  senderId == currentUserId ? 'flex-end' : 'flex-start',
                 marginLeft: 10,
               },
               styles.msgTimeTextStyle,
@@ -469,6 +472,7 @@ const MessageItemComponent = ({
 
   return (
     <View style={{flex: 1, marginBottom: 4}}>
+     
       {renderTextViewItem()}
       {/* {item?.attachments?.length > 0 ? (
         <>

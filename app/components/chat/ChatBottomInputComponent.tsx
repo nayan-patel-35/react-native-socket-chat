@@ -1,4 +1,5 @@
-import React from 'react';
+import moment from 'moment';
+import React, { useContext } from 'react';
 import {
   Image,
   ImageStyle,
@@ -12,47 +13,106 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {Assets} from '../../assets';
+import { Assets } from '../../assets';
+import { ChatContext } from '../../context/ChatContext';
+import { SocketContext } from '../../context/SocketContext';
 import AppColors from '../../utils/AppColors';
-import {isEmpty} from '../../utils/AppConstant';
+import { isEmpty } from '../../utils/AppConstant';
 
 interface ChatBottomInputComponentProps {
-  value: string | undefined;
-  onChangeText: ((text: string) => void) | undefined;
-  textInputProps?: TextInputProps;
-  disabled?: boolean;
-  placeholderTextColor?: string;
-  placeholder?: string;
-  textInputContainerPropsStyle?: StyleProp<ViewStyle>;
-  textInputPropsStyle?: StyleProp<TextStyle>;
-  attchmentImage?: Image;
-  attachmentImagePropsStyle?: StyleProp<ImageStyle>;
-  sendImage?: Image;
-  sendImagePropsStyle?: StyleProp<ImageStyle>;
-  keyboardViewPropsStyle?: StyleProp<ViewStyle>;
-  onPressAttachment?: () => void;
-  onPressSend: () => void;
-  children?: React.ReactNode;
+  props: {
+    value: string | undefined;
+    onChangeText: ((text: string) => void) | undefined;
+    textInputProps?: TextInputProps;
+    disabled?: boolean;
+    placeholderTextColor?: string;
+    placeholder?: string;
+    textInputContainerPropsStyle?: StyleProp<ViewStyle>;
+    textInputPropsStyle?: StyleProp<TextStyle>;
+    attchmentImage?: Image;
+    attachmentImagePropsStyle?: StyleProp<ImageStyle>;
+    sendImage?: Image;
+    sendImagePropsStyle?: StyleProp<ImageStyle>;
+    keyboardViewPropsStyle?: StyleProp<ViewStyle>;
+    onPressAttachment?: () => void;
+    onPressSend: () => void;
+    children?: React.ReactNode;
+  };
 }
 
-const ChatBottomInputComponent = ({
-  value,
-  onChangeText,
-  textInputProps,
-  disabled,
-  placeholderTextColor,
-  placeholder,
-  textInputContainerPropsStyle,
-  textInputPropsStyle,
-  attchmentImage,
-  attachmentImagePropsStyle,
-  sendImage,
-  sendImagePropsStyle,
-  keyboardViewPropsStyle,
-  onPressAttachment,
-  onPressSend,
-  children,
-}: ChatBottomInputComponentProps) => {
+const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
+  const {
+    value,
+    onChangeText,
+    textInputProps,
+    disabled = false,
+    placeholderTextColor,
+    placeholder,
+    textInputContainerPropsStyle,
+    textInputPropsStyle,
+    attchmentImage,
+    attachmentImagePropsStyle,
+    sendImage,
+    sendImagePropsStyle,
+    keyboardViewPropsStyle,
+    onPressAttachment,
+    onPressSend,
+  } = props;
+  const {state: socketState, appendMessages}: any = useContext(SocketContext);
+  const {state: chatState}: any = useContext(ChatContext);
+
+  const _onPressSend = () => {
+    onPressSend?.();
+    let receiverData = chatState?.selectedChat?.members?.find(
+      (item: any) => item?._id != socketState?.user?._id,
+    );
+
+    if (!isEmpty(value?.toString()?.trim())) {
+      const chatPayload = {
+        content: value,
+        messageType: 'Chat',
+        status: 'online',
+        // isSystem: false,
+        user: receiverData?._id,
+        sender: socketState?.user?._id,
+        to: receiverData?._id,
+        from: socketState?.user?._id,
+        channelId: chatState?.selectedChat?.channelId,
+        type: 'channel',
+      };
+      socketState?.socketClient?.emit('message', chatPayload);
+
+      const tempData = {
+        content: value,
+        messageType: 'Chat',
+        status: 'online',
+        // isSystem: false,
+        user: receiverData?._id,
+        to: receiverData?._id,
+        from: socketState?.user?._id,
+        sender: {
+          _id: socketState?.user?._id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          fullName: socketState?.user?.name,
+          email: socketState?.user?.email,
+        },
+        channelId: chatState?.selectedChat?.channelId,
+        type: 'channel',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        date: moment(new Date()).format('YYYY-MM-DD'),
+        _id: moment(new Date()).format('YYYY-MM-DD'),
+      };
+
+      appendMessages(tempData);
+    }
+  };
+
+  const _onChangeText = (e: any) => {
+    onChangeText?.(e);
+  };
+
   return (
     <View style={[styles.keyboardViewStyle, keyboardViewPropsStyle]}>
       {onPressAttachment ? (
@@ -71,7 +131,7 @@ const ChatBottomInputComponent = ({
         style={[styles.textInputContainerStyle, textInputContainerPropsStyle]}>
         <TextInput
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={_onChangeText}
           placeholderTextColor={
             placeholderTextColor ? placeholderTextColor : 'gray'
           }
@@ -81,7 +141,7 @@ const ChatBottomInputComponent = ({
         />
       </View>
       <Pressable
-        onPress={onPressSend}
+        onPress={_onPressSend}
         style={styles.sendBtnStyle}
         disabled={
           disabled

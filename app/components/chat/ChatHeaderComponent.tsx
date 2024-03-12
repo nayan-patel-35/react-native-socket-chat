@@ -11,7 +11,7 @@ import {
   TextStyle,
   View,
 } from 'react-native';
-import {Assets} from '../../assets';
+import { Assets } from '../../assets';
 import AppColors from '../../utils/AppColors';
 var moment = require('moment');
 const today = moment().format('YYYY-MM-DD');
@@ -19,7 +19,7 @@ const today = moment().format('YYYY-MM-DD');
 interface ChatHeaderComponentProps {
   channelName?: string;
   chatMember?: [];
-  receverUserData?: any;
+  receiverUserData?: any;
   titleHeadTextPropsStyle?: StyleProp<TextStyle>;
   subTitleTextPropsStyle?: StyleProp<TextStyle>;
   backImage?: Image;
@@ -32,7 +32,7 @@ interface ChatHeaderComponentProps {
 const ChatHeaderComponent = ({
   channelName,
   chatMember,
-  receverUserData,
+  receiverUserData,
   titleHeadTextPropsStyle,
   subTitleTextPropsStyle,
   backImage,
@@ -78,19 +78,19 @@ const ChatHeaderComponent = ({
                 </Text>
               ) : (
                 <Text style={styles.subTitleTextStyle}>
-                  {receverUserData?.[0]?.user?.online ? (
+                  {receiverUserData?.[0]?.user?.online ? (
                     'Online'
                   ) : (
                     <Text>
                       Last seen on
-                      {moment(receverUserData?.[0]?.user?.last_active).format(
+                      {moment(receiverUserData?.[0]?.user?.last_active).format(
                         'YYYY-MM-DD',
                       ) == today
                         ? moment(
-                            receverUserData?.[0]?.user?.last_active,
+                            receiverUserData?.[0]?.user?.last_active,
                           ).format(' hh:mm A')
                         : moment(
-                            receverUserData?.[0]?.user?.last_active,
+                            receiverUserData?.[0]?.user?.last_active,
                           ).format(' DD MMM')}
                     </Text>
                   )}
