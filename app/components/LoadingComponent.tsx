@@ -1,6 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {ActivityIndicator, Modal, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import AppColors from '../utils/AppColors';
 
 interface LoadingComponentProps {

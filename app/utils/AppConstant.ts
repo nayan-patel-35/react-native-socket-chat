@@ -1,4 +1,4 @@
-import { Dimensions, Linking, Platform } from 'react-native';
+import {Dimensions, Linking, Platform} from 'react-native';
 
 export const DEVICE_HEIGHT = Dimensions.get('screen').height;
 export const DEVICE_WEIGHT = Dimensions.get('screen').width;
@@ -19,11 +19,6 @@ export const CHAT_MESSAGE_STRING_TYPE = {
   Image_Type: 'Image',
   Video_Type: 'Video',
   File_Type: 'File',
-};
-
-export const SOCKET_EVENT_TYPE = {
-  JOIN_CHAT: 'join chat',
-  MESSAGE: 'message',
 };
 
 export function isIphoneWithNotch() {
