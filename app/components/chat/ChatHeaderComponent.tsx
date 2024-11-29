@@ -1,3 +1,4 @@
+import moment from 'moment';
 import React from 'react';
 import {
   Image,
@@ -13,12 +14,12 @@ import {
 } from 'react-native';
 import { Assets } from '../../assets';
 import AppColors from '../../utils/AppColors';
-var moment = require('moment');
+import { generateAvatar } from '../../utils/AppConstant';
 const today = moment().format('YYYY-MM-DD');
 
 interface ChatHeaderComponentProps {
   channelName?: string;
-  chatMember?: [];
+  chatMember?: any[];
   receiverUserData?: any;
   titleHeadTextPropsStyle?: StyleProp<TextStyle>;
   subTitleTextPropsStyle?: StyleProp<TextStyle>;
@@ -30,8 +31,8 @@ interface ChatHeaderComponentProps {
 }
 
 const ChatHeaderComponent = ({
-  channelName,
-  chatMember,
+  channelName = '',
+  chatMember = [],
   receiverUserData,
   titleHeadTextPropsStyle,
   subTitleTextPropsStyle,
@@ -41,6 +42,35 @@ const ChatHeaderComponent = ({
   onPressMember,
   children,
 }: ChatHeaderComponentProps) => {
+  const lastActiveTime = receiverUserData?.[0]?.user?.last_active;
+  const isOnline = receiverUserData?.[0]?.user?.online;
+
+  const renderSubtitle = () => {
+    if (chatMember?.length > 0) {
+      return (
+        <Text style={[styles.subTitleTextStyle, subTitleTextPropsStyle]}>
+          {chatMember.length} {chatMember.length > 1 ? 'Members' : 'Member'}
+        </Text>
+      );
+    }
+
+    if (isOnline) {
+      return <Text style={styles.subTitleTextStyle}>Online</Text>;
+    }
+
+    const formattedTime = moment(lastActiveTime).format(
+      moment(lastActiveTime).isSame(today, 'day') ? 'hh:mm A' : 'DD MMM',
+    );
+
+    return (
+      <Text style={styles.subTitleTextStyle}>Last seen on {formattedTime}</Text>
+    );
+  };
+
+  {
+    console.log('channelName', JSON.stringify(channelName));
+  }
+
   return (
     <>
       <StatusBar backgroundColor={AppColors.white} barStyle="dark-content" />
@@ -48,54 +78,26 @@ const ChatHeaderComponent = ({
         <Pressable onPress={onPressBack} style={styles.backBtnViewStyle}>
           <Image
             style={[styles.backImageStyle, backImagePropsStyle]}
-            source={backImage ? backImage : Assets.arrow_back_black_icon}
+            source={backImage || Assets.arrow_back_black_icon}
           />
         </Pressable>
+
+        <View style={styles.avtarHeadImageStyle}>
+          <Text style={styles.avtarHeadTextStyle}>
+            {generateAvatar(channelName)}
+          </Text>
+        </View>
+
         <Pressable
           style={{flex: Platform.OS == 'ios' ? 8 : 2}}
           onPress={onPressMember}>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignSelf: 'flex-start',
-            }}>
-            <View
-              style={{
-                justifyContent: 'center',
-                flex: 1,
-              }}>
+          <View style={styles.memberInfoContainer}>
+            <View style={styles.textContainer}>
               <Text
                 style={[styles.titleHeadTextStyle, titleHeadTextPropsStyle]}>
                 {channelName ? channelName : ''}
               </Text>
-
-              {chatMember?.length != 0 && chatMember != undefined ? (
-                <Text
-                  style={[styles.subTitleTextStyle, subTitleTextPropsStyle]}>
-                  {chatMember?.length}
-                  {` ${chatMember?.length > 1 ? 'Members' : 'Member'}`}
-                </Text>
-              ) : (
-                <Text style={styles.subTitleTextStyle}>
-                  {receiverUserData?.[0]?.user?.online ? (
-                    'Online'
-                  ) : (
-                    <Text>
-                      Last seen on
-                      {moment(receiverUserData?.[0]?.user?.last_active).format(
-                        'YYYY-MM-DD',
-                      ) == today
-                        ? moment(
-                            receiverUserData?.[0]?.user?.last_active,
-                          ).format(' hh:mm A')
-                        : moment(
-                            receiverUserData?.[0]?.user?.last_active,
-                          ).format(' DD MMM')}
-                    </Text>
-                  )}
-                </Text>
-              )}
+              {renderSubtitle()}
             </View>
           </View>
         </Pressable>
@@ -144,6 +146,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
 
+  textContainer: {
+    justifyContent: 'center',
+    flex: 1,
+  },
+
+  memberInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+
   titleHeadTextStyle: {
     fontSize: 18,
     lineHeight: 25,
@@ -154,5 +167,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 20,
     color: AppColors.dark_gray,
+  },
+
+  avtarHeadImageStyle: {
+    width: 40,
+    height: 40,
+    borderRadius: 100,
+    marginRight: 10,
+    backgroundColor: AppColors.border_color,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  avtarHeadTextStyle: {
+    fontSize: 17,
+    color: AppColors.black,
+    fontWeight: 'semibold',
   },
 });

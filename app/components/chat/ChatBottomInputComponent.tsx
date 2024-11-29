@@ -205,6 +205,7 @@ const styles = StyleSheet.create({
     borderColor: AppColors.border_color,
     marginHorizontal: 8,
     marginTop: 5,
+    paddingHorizontal: 10,
   },
 
   textInputStyle: {

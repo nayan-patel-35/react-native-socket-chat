@@ -30,7 +30,7 @@ export const ChannelListScreen = ({props}: ChannelListScreenProps) => {
   const {state: socketState, getMessagesList}: any = useContext(SocketContext);
 
   const _onPress = (item: any, index: number) => {
-    console.log('Component_onPress',socketState?.user?._id)
+    console.log('Component_onPress',JSON.stringify(item))
     onPress?.(item, index);
     updateSelectedChat(item);
     if (isEmpty(item?.channelId) && isEmpty(item?.members)) {

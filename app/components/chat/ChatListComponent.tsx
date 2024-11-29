@@ -6,7 +6,7 @@ import {
   CHAT_MESSAGE_STRING_TYPE,
   CHAT_MESSAGE_TYPE,
   DEVICE_WEIGHT,
-  DUMMY_PLACEHOLDER,
+  generateAvatar,
 } from '../../utils/AppConstant';
 const today = moment().format('YYYY-MM-DD');
 
@@ -25,7 +25,7 @@ interface ChatListComponentProps {
 const ChatListComponent = ({
   item,
   index,
-  channelName,
+  channelName = '',
   channelImage,
   unreadCount,
   onPress,
@@ -54,13 +54,22 @@ const ChatListComponent = ({
     <Pressable
       style={styles.chatCardListItemContainerStyle}
       onPress={() => onPress(item, index)}>
-      <Image
-        style={styles.avtarImageStyle}
-        source={{
-          uri: channelImage ? channelImage : DUMMY_PLACEHOLDER,
-        }}
-        resizeMode={'contain'}
-      />
+      {!channelImage ? (
+        <Image
+          style={styles.avtarImageStyle}
+          source={{
+            uri: channelImage,
+          }}
+          resizeMode={'contain'}
+        />
+      ) : (
+        <View style={styles.avtarImageStyle}>
+          <Text style={styles.avtarHeadTextStyle}>
+            {generateAvatar(channelName)}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.chatCardListSubContainerStyle}>
         <View style={{flex: 1, flexDirection: 'row'}}>
           <Text style={styles.channelNameTextStyle} numberOfLines={1}>
@@ -96,20 +105,26 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 100,
+    backgroundColor: AppColors.border_color,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  avtarHeadTextStyle: {
+    fontSize: 20,
+    color: AppColors.black,
+    fontWeight: 'semibold',
   },
 
   chatCardListItemContainerStyle: {
     backgroundColor: AppColors.white,
-    width: DEVICE_WEIGHT - 20,
+    width: DEVICE_WEIGHT - 30,
     flexDirection: 'row',
     alignSelf: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 13,
     marginHorizontal: 5,
-    marginVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: AppColors.border_color,
+    borderBottomColor: AppColors.border_color,
+    borderBottomWidth: 0.8,
   },
 
   chatCardListSubContainerStyle: {

@@ -6,12 +6,10 @@ import {
   FlatList as FlatListType,
   Keyboard,
   Platform,
-  StatusBar,
   StyleSheet,
-  View
+  View,
 } from 'react-native';
 import { openSettings } from 'react-native-permissions';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Assets } from '../assets';
 import AutoScroll from '../components/AutoScroll';
@@ -24,7 +22,12 @@ import TypingIndicator from '../components/chat/TypingIndicatorDot/TypingIndicat
 import { ChatContext } from '../context/ChatContext';
 import { SocketContext } from '../context/SocketContext';
 import AppColors from '../utils/AppColors';
-import { DEVICE_HEIGHT, isEmpty, isIphoneWithNotch } from '../utils/AppConstant';
+import {
+  CHANNEL_TYPE,
+  DEVICE_HEIGHT,
+  isEmpty,
+  isIphoneWithNotch,
+} from '../utils/AppConstant';
 import {
   GetCameraImage,
   GetCameraVideo,
@@ -61,7 +64,7 @@ export const MessageListScreen = ({
   onPressSend,
   additionalFlatListProps,
   listContainer,
-  contentContainer
+  contentContainer,
 }: any) => {
   const {state: socketState}: any = useContext(SocketContext);
   const {state: chatState}: any = useContext(ChatContext);
@@ -98,7 +101,7 @@ export const MessageListScreen = ({
   const initialScrollSet = useRef<boolean>(false);
   const channelResyncScrollSet = useRef<boolean>(true);
 
-   const refCallback = (ref: FlatListType) => {
+  const refCallback = (ref: FlatListType) => {
     flatListRef.current = ref;
   };
 
@@ -291,29 +294,34 @@ export const MessageListScreen = ({
   };
 
   const renderChannelName = () => {
-    let channelName: string = '';
+    // If a channel name is available, use it
     if (!isEmpty(chatState?.selectedChat?.channelName)) {
-      channelName = chatState?.selectedChat?.channelName;
+      return chatState?.selectedChat?.channelName;
     }
+
+    // If there are multiple members and the channel name is empty, use the first member's name
     if (
       isEmpty(chatState?.selectedChat?.channelName) &&
       chatState?.selectedChat?.members?.length >= 2
     ) {
-      let tempUsers = chatState?.selectedChat?.members?.filter(
-        (item: any, index: number) => {
-          return item?._id != socketState?.user?._id;
-        },
+      const otherMembers = chatState?.selectedChat?.members?.filter(
+        (member: any) => member._id !== socketState?.user?._id,
       );
-      channelName =
-        tempUsers?.length > 0
-          ? `${tempUsers[0]?.firstName} ${tempUsers[0]?.lastName}`
-          : '';
-    } else {
-      channelName = chatState?.selectedChat
-        ? `${chatState?.selectedChat?.firstName} ${chatState?.selectedChat?.lastName}`
+      return otherMembers?.length > 0
+        ? `${otherMembers[0]?.firstName} ${otherMembers[0]?.lastName}`
         : '';
     }
-    return channelName;
+    // If it's a group channel, return the channel name if available
+    if (chatState?.selectedChat?.channelType === CHANNEL_TYPE.GROUP) {
+      return chatState?.selectedChat?.channelName ?? '';
+    }
+
+    // For individual channels, return the user's name (first and last)
+    return chatState?.selectedChat
+      ? `${chatState?.selectedChat?.firstName ?? ''} ${
+          chatState?.selectedChat?.lastName ?? ''
+        }`
+      : '';
   };
 
   // .. default date format
@@ -330,104 +338,104 @@ export const MessageListScreen = ({
       : moment(tStickyHeaderDate).format(stickyHeaderFormatDate);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={'dark-content'} backgroundColor={AppColors.white} />
-      <View style={styles.container}>
-        <ChatHeaderComponent
-          backImage={backImage}
-          onPressBack={onPressBack}
-          channelName={channelName ? channelName : renderChannelName()}
-          chatMember={
-            chatMember && chatMember?.length > 0
-              ? chatMember
-              : chatState?.selectedChat?.members?.filter(
-                  (item: any, index: number) => {
-                    return item?._id != socketState?.user?._id;
-                  },
-                )
-          }
-          receiverUserData={receiverUserData}
-          titleHeadTextPropsStyle={titleHeadTextPropsStyle}
-          subTitleTextPropsStyle={subTitleTextPropsStyle}
-          backImagePropsStyle={backImagePropsStyle}
-          onPressMember={onPressMember}
-        />
+    <View style={styles.container}>
+      <ChatHeaderComponent
+        backImage={backImage}
+        onPressBack={onPressBack}
+        channelName={channelName ? channelName : renderChannelName()}
+        chatMember={
+          chatMember && chatMember?.length > 0
+            ? chatMember
+            : chatState?.selectedChat?.members?.filter(
+                (item: any, index: number) => {
+                  return item?._id != socketState?.user?._id;
+                },
+              )
+        }
+        receiverUserData={receiverUserData}
+        titleHeadTextPropsStyle={titleHeadTextPropsStyle}
+        subTitleTextPropsStyle={subTitleTextPropsStyle}
+        backImagePropsStyle={backImagePropsStyle}
+        onPressMember={onPressMember}
+      />
 
-        <View
-          style={{
-            flex: 1,
-            paddingHorizontal: 10,
-          }}>
-          {isLoading ? (
-            <View style={styles.scrollviewContainer} />
-          ) : socketState?.channelsMessagesList?.length > 0 ? (
-            <AutoScroll showsVerticalScrollIndicator={false} nestedScrollEnabled>
-                <FlatList
-                 ref={refCallback}
-                  contentContainerStyle={[styles.contentContainer, contentContainer]}
-                  horizontal={false}
-                  keyboardShouldPersistTaps="handled"
-                  keyExtractor={keyExtractor}
-                  data={
-                    socketState?.channelsMessagesList?.length > 0
-                      ? socketState?.channelsMessagesList
-                      : []
-                  }
-                  renderItem={_renderMessageItem}
-                  disableVirtualization={true}
-                  ListFooterComponent={
-                    isTyping ? <TypingIndicator isTyping={isTyping} /> : null
-                  }
-                  style={[styles.listContainer, listContainer]}
-                  testID='message-flat-list'
-                  showsVerticalScrollIndicator={false}
-                  viewabilityConfig={flatListViewabilityConfig}
-                  {...additionalFlatListProps}
-                />
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: 10,
+        }}>
+        {isLoading ? (
+          <View style={styles.scrollviewContainer} />
+        ) : socketState?.channelsMessagesList?.length > 0 ? (
+          <AutoScroll showsVerticalScrollIndicator={false} nestedScrollEnabled>
+            <FlatList
+              ref={refCallback}
+              contentContainerStyle={[
+                styles.contentContainer,
+                contentContainer,
+              ]}
+              horizontal={false}
+              keyboardShouldPersistTaps="handled"
+              keyExtractor={keyExtractor}
+              data={
+                socketState?.channelsMessagesList?.length > 0
+                  ? socketState?.channelsMessagesList
+                  : []
+              }
+              renderItem={_renderMessageItem}
+              disableVirtualization={true}
+              ListFooterComponent={
+                isTyping ? <TypingIndicator isTyping={isTyping} /> : null
+              }
+              style={[styles.listContainer, listContainer]}
+              testID="message-flat-list"
+              showsVerticalScrollIndicator={false}
+              viewabilityConfig={flatListViewabilityConfig}
+              {...additionalFlatListProps}
+            />
 
-                {/* <View style={styles.stickyHeader}>
+            {/* <View style={styles.stickyHeader}>
                   <DateHeader dateString={stickyHeaderDateToRender} />
                 </View> */}
-            </AutoScroll>
-          ) : (
-              <NoDataComponent
-                image={Assets.no_chat}
-                title={'No Chat'}
-                subTitle={'No Chat Initiation has occurred'}
-              />
-          )}
-        </View>
-
-        <ChatBottomInputComponent
-          props={{
-            value: sendMsgText,
-            onChangeText: _onChangeText,
-            textInputProps: textInputProps,
-            disabled: disabled,
-            placeholderTextColor: placeholderTextColor,
-            placeholder: placeholder,
-            textInputContainerPropsStyle: textInputContainerPropsStyle,
-            textInputPropsStyle: textInputPropsStyle,
-            attchmentImage: attchmentImage,
-            attachmentImagePropsStyle: attachmentImagePropsStyle,
-            sendImage: sendImage,
-            sendImagePropsStyle: sendImagePropsStyle,
-            keyboardViewPropsStyle: [
-              keyboardViewPropsStyle,
-              {
-                marginBottom:
-                  Platform.OS == 'ios'
-                    ? isIphoneWithNotch()
-                      ? keyboardHeight - 20
-                      : keyboardHeight + 10
-                    : 5,
-              },
-            ],
-            onPressAttachment: onPressAttachment,
-            onPressSend: _onPressSend,
-          }}
-        />
+          </AutoScroll>
+        ) : (
+          <NoDataComponent
+            image={Assets.no_chat}
+            title={'No Chat'}
+            subTitle={'No Chat Initiation has occurred'}
+          />
+        )}
       </View>
+
+      <ChatBottomInputComponent
+        props={{
+          value: sendMsgText,
+          onChangeText: _onChangeText,
+          textInputProps: textInputProps,
+          disabled: disabled,
+          placeholderTextColor: placeholderTextColor,
+          placeholder: placeholder,
+          textInputContainerPropsStyle: textInputContainerPropsStyle,
+          textInputPropsStyle: textInputPropsStyle,
+          attchmentImage: attchmentImage,
+          attachmentImagePropsStyle: attachmentImagePropsStyle,
+          sendImage: sendImage,
+          sendImagePropsStyle: sendImagePropsStyle,
+          keyboardViewPropsStyle: [
+            keyboardViewPropsStyle,
+            {
+              marginBottom:
+                Platform.OS == 'ios'
+                  ? isIphoneWithNotch()
+                    ? keyboardHeight - 15
+                    : keyboardHeight + 10
+                  : 5,
+            },
+          ],
+          onPressAttachment: onPressAttachment,
+          onPressSend: _onPressSend,
+        }}
+      />
 
       <RBSheetComponent
         inputRef={refSelectPhotoVideoSheetRef}
@@ -444,7 +452,7 @@ export const MessageListScreen = ({
           onPressType={onSelectCameraGallery}
         />
       </RBSheetComponent>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -506,12 +514,12 @@ const styles = StyleSheet.create({
     top: 0,
   },
 
-   listContainer: {
+  listContainer: {
     flex: 1,
     width: '100%',
   },
 
-   contentContainer: {
+  contentContainer: {
     flexGrow: 1,
     paddingBottom: 4,
   },

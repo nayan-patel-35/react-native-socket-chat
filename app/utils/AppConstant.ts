@@ -26,6 +26,11 @@ export const SOCKET_EVENT_TYPE = {
   MESSAGE: 'message',
 };
 
+export const CHANNEL_TYPE = {
+  CHAT: 'Chat',
+  GROUP: 'Group',
+};
+
 export function isIphoneWithNotch() {
   const dimen = Dimensions.get('window');
   return (
@@ -138,5 +143,21 @@ export const IsOpenURL = (urlString: string) => {
     }
   } catch (error) {
     return false;
+  }
+};
+
+export const generateAvatar = (name: string) => {
+  if (/\s/?.test(name)) {
+    let spiltString = name?.toString()?.split(' ');
+    if (spiltString?.length > 0) {
+      return (
+        spiltString[0]?.toString()?.trim()?.charAt(0)?.toUpperCase() +
+        spiltString[1]?.toString()?.trim()?.charAt(0)?.toUpperCase()
+      );
+    } else {
+      return name?.toString()?.trim()?.charAt(0)?.toUpperCase();
+    }
+  } else {
+    return name?.toString()?.trim()?.charAt(0)?.toUpperCase();
   }
 };
