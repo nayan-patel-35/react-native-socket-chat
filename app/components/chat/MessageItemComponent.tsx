@@ -1,5 +1,5 @@
 import Clipboard from '@react-native-clipboard/clipboard';
-import { useContext } from 'react';
+import {useContext} from 'react';
 import {
   Image,
   Platform,
@@ -10,10 +10,15 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import Video from 'react-native-video';
-import { Assets } from '../../assets';
-import { SocketContext } from '../../context/SocketContext';
+import {Assets} from '../../assets';
+import {SocketContext} from '../../context/SocketContext';
 import AppColors from '../../utils/AppColors';
-import { IsOpenURL, isValidUrl } from '../../utils/AppConstant';
+import {
+  FILES_TYPES,
+  getFileTypeFromUrl,
+  IsOpenURL,
+  isValidUrl,
+} from '../../utils/AppConstant';
 var moment = require('moment');
 const today = moment().format('YYYY-MM-DD');
 
@@ -21,7 +26,7 @@ interface MessageItemComponentProps {
   props: {
     item: any;
     index: number;
-    date:string;
+    date: string;
     toUserId?: string;
     fromUserId?: string;
     onOpenChatImage?: () => void;
@@ -30,9 +35,8 @@ interface MessageItemComponentProps {
 }
 
 const MessageItemComponent = ({props}: MessageItemComponentProps) => {
-  const {item, index, date, onOpenChatImage, onOpenChatVideo} =
-    props;
-     const {state: socketState}: any = useContext(SocketContext);
+  const {item, index, date, onOpenChatImage, onOpenChatVideo} = props;
+  const {state: socketState}: any = useContext(SocketContext);
 
   let senderId: string = item?.sender?._id;
   let currentUserId: string = socketState?.user?._id;
@@ -58,11 +62,8 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
         <View
           style={{
             backgroundColor:
-              senderId == currentUserId
-                ? AppColors.silver
-                : AppColors.silver,
-            alignSelf:
-              senderId == currentUserId ? 'flex-end' : 'flex-start',
+              senderId == currentUserId ? AppColors.silver : AppColors.silver,
+            alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
             padding: 3,
             borderRadius: 8,
           }}>
@@ -87,8 +88,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
         <View
           style={{
             flexDirection: 'row',
-            alignSelf:
-              senderId == currentUserId ? 'flex-end' : 'flex-start',
+            alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
           }}>
           <Text
             style={[
@@ -122,84 +122,95 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
 
   const renderImageViewItem = () => {
     return (
-      <View style={{marginTop: 10}}>
-        <View
-          style={{
-            backgroundColor:
-              senderId == currentUserId
-                ? AppColors.silver
-                : AppColors.silver,
-            alignSelf:
-              senderId == currentUserId ? 'flex-end' : 'flex-start',
-            padding: 3,
-            borderRadius: 8,
-          }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              alignSelf:
-                senderId == currentUserId ? 'flex-end' : 'flex-start',
-            }}>
-            <TouchableOpacity
-              disabled={item.type == 'deleted' ? true : false}
-              onPress={onOpenChatImage}>
-              <Image
-                style={[
-                  {
-                    alignSelf:
+      <>
+        {item.attachments?.length > 0 &&
+          item.attachments?.map((item: any, index: number) => {
+            return (
+              <>
+                <View
+                  style={{
+                    backgroundColor:
                       senderId == currentUserId
-                        ? 'flex-end'
-                        : 'flex-start',
-                  },
-                  styles.chatImgVideoStyle,
-                ]}
-                source={{
-                  uri: item.attachments[0]?.image_url,
-                }}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignSelf:
-              senderId == currentUserId ? 'flex-end' : 'flex-start',
-          }}>
-          {senderId !== currentUserId && (
-            <Text
-              style={[
-                {
-                  alignSelf:
-                    senderId == currentUserId ? 'flex-end' : 'flex-start',
-                },
-                styles.msgTimeTextStyle,
-              ]}>
-              {senderId !== currentUserId
-                ? `${item?.sender?.firstName} ${item?.sender?.lastName}`
-                : ''}
-            </Text>
-          )}
-          <Text
-            style={[
-              {
-                alignSelf:
-                  senderId == currentUserId ? 'flex-end' : 'flex-start',
-                marginLeft: 10,
-              },
-              styles.msgTimeTextStyle,
-            ]}>
-            {moment(item.updatedAt).format('YYYY-MM-DD') == today
-              ? moment(item.updatedAt).format('hh:mm A')
-              : moment(item.updatedAt).format('hh:mm A DD MMM')}
-          </Text>
-        </View>
-      </View>
+                        ? AppColors.silver
+                        : AppColors.silver,
+                    alignSelf:
+                      senderId == currentUserId ? 'flex-end' : 'flex-start',
+                    padding: 3,
+                    borderRadius: 8,
+                    marginTop: 10,
+                  }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      alignSelf:
+                        senderId == currentUserId ? 'flex-end' : 'flex-start',
+                    }}>
+                    <TouchableOpacity
+                      activeOpacity={0.5}
+                      disabled={item.type == 'deleted' ? true : false}
+                      onPress={onOpenChatImage}>
+                      <Image
+                        style={[
+                          {
+                            alignSelf:
+                              senderId == currentUserId
+                                ? 'flex-end'
+                                : 'flex-start',
+                          },
+                          styles.chatImgVideoStyle,
+                        ]}
+                        source={{
+                          uri: item?.fileUrl,
+                        }}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignSelf:
+                      senderId == currentUserId ? 'flex-end' : 'flex-start',
+                  }}>
+                  {senderId !== currentUserId && (
+                    <Text
+                      style={[
+                        {
+                          alignSelf:
+                            senderId == currentUserId
+                              ? 'flex-end'
+                              : 'flex-start',
+                        },
+                        styles.msgTimeTextStyle,
+                      ]}>
+                      {senderId !== currentUserId
+                        ? `${item?.sender?.firstName} ${item?.sender?.lastName}`
+                        : ''}
+                    </Text>
+                  )}
+                  <Text
+                    style={[
+                      {
+                        alignSelf:
+                          senderId == currentUserId ? 'flex-end' : 'flex-start',
+                        marginLeft: 10,
+                      },
+                      styles.msgTimeTextStyle,
+                    ]}>
+                    {moment(item.updatedAt).format('YYYY-MM-DD') == today
+                      ? moment(item.updatedAt).format('hh:mm A')
+                      : moment(item.updatedAt).format('hh:mm A DD MMM')}
+                  </Text>
+                </View>
+              </>
+            );
+          })}
+      </>
     );
   };
 
-  const renderFileViewItem = () => {
+  const renderFileViewItem = (item: any) => {
     return (
       <TouchableOpacity
         style={[
@@ -207,8 +218,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
           {
             padding: item?.content ? 0 : 12,
             marginTop: 22,
-            alignSelf:
-              senderId == currentUserId ? 'flex-end' : 'flex-start',
+            alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
             marginEnd: senderId == currentUserId ? 0 : 50,
             marginStart: senderId == currentUserId ? 50 : 0,
             borderBottomLeftRadius: senderId !== currentUserId ? 0 : 16,
@@ -221,8 +231,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
         ]}>
         <View
           style={{
-            alignSelf:
-              senderId == currentUserId ? 'flex-end' : 'flex-start',
+            alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
             width: '80%',
             flexDirection: 'row',
             marginTop: 8,
@@ -236,15 +245,12 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
                 paddingHorizontal: item?.content ? 8 : 0,
                 marginBottom: 6,
                 color:
-                  senderId == currentUserId
-                    ? AppColors.white
-                    : AppColors.black,
+                  senderId == currentUserId ? AppColors.white : AppColors.black,
                 alignSelf:
                   senderId == currentUserId ? 'flex-end' : 'flex-start',
               },
             ]}>
-            {item.attachments[0]?.file_url?.toString()?.split('/')?.pop()}
-            {/* {item.attachments[0]?.name} */}
+            {item.file_url}
           </Text>
         </View>
         <View
@@ -265,9 +271,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
             style={[
               {
                 color:
-                  senderId == currentUserId
-                    ? AppColors.white
-                    : AppColors.black,
+                  senderId == currentUserId ? AppColors.white : AppColors.black,
                 alignSelf:
                   senderId == currentUserId ? 'flex-end' : 'flex-start',
               },
@@ -292,7 +296,6 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
   const renderTextViewItem = () => {
     return (
       <>
-     
         <TouchableOpacity
           activeOpacity={1}
           onLongPress={() => _onPressCopyMessage(item)}
@@ -301,8 +304,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
             {
               padding: item?.content ? 0 : 12,
               marginTop: 10,
-              alignSelf:
-                senderId == currentUserId ? 'flex-end' : 'flex-start',
+              alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
               marginEnd: senderId == currentUserId ? 0 : 50,
               marginStart: senderId == currentUserId ? 50 : 0,
               borderBottomLeftRadius: senderId !== currentUserId ? 0 : 18,
@@ -332,8 +334,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
         <View
           style={{
             flexDirection: 'row',
-            alignSelf:
-              senderId == currentUserId ? 'flex-end' : 'flex-start',
+            alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
           }}>
           {senderId !== currentUserId && (
             <Text
@@ -379,8 +380,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
             {
               padding: item?.content ? 0 : 12,
               marginTop: 10,
-              alignSelf:
-                senderId == currentUserId ? 'flex-end' : 'flex-start',
+              alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
               marginEnd: senderId == currentUserId ? 0 : 50,
               marginStart: senderId == currentUserId ? 50 : 0,
               borderBottomLeftRadius: senderId !== currentUserId ? 0 : 18,
@@ -435,8 +435,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
         <View
           style={{
             flexDirection: 'row',
-            alignSelf:
-              senderId == currentUserId ? 'flex-end' : 'flex-start',
+            alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
           }}>
           {senderId !== currentUserId && (
             <Text
@@ -470,10 +469,32 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
     );
   };
 
+  const renderContentByType = () => {
+    item.attachments?.map((item: any, index: number) => {
+      const fileType = getFileTypeFromUrl(item?.fileUrl);
+      console.log('fileType', fileType);
+
+      switch (fileType) {
+        case FILES_TYPES.JPEG:
+        case FILES_TYPES.JPG:
+        case FILES_TYPES.PNG:
+          return renderImageViewItem();
+        case FILES_TYPES.PDF:
+          return renderFileViewItem(item);
+        case FILES_TYPES.MP4:
+        case FILES_TYPES.MKV:
+          return renderVideoViewItem();
+        default:
+          return renderFileViewItem(item);
+      }
+    });
+  };
+
   return (
     <View style={{flex: 1, marginBottom: 4}}>
-     
-      {renderTextViewItem()}
+      {item?.attachments?.length > 0
+        ? renderImageViewItem()
+        : renderTextViewItem()}
       {/* {item?.attachments?.length > 0 ? (
         <>
           {item.text == CHAT_MESSAGE_TYPE.ATTACHMENT_VIDEO

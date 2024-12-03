@@ -1,4 +1,4 @@
-import { Dimensions, Linking, Platform } from 'react-native';
+import {Dimensions, Linking, Platform} from 'react-native';
 
 export const DEVICE_HEIGHT = Dimensions.get('screen').height;
 export const DEVICE_WEIGHT = Dimensions.get('screen').width;
@@ -29,6 +29,15 @@ export const SOCKET_EVENT_TYPE = {
 export const CHANNEL_TYPE = {
   CHAT: 'Chat',
   GROUP: 'Group',
+};
+
+export const FILES_TYPES = {
+  JPEG: 'image/jpeg',
+  JPG: 'image/jpg',
+  PNG: 'image/png',
+  MP4: 'video/mp4',
+  MKV: 'video/mkv',
+  PDF: 'application/pdf',
 };
 
 export function isIphoneWithNotch() {
@@ -159,5 +168,35 @@ export const generateAvatar = (name: string) => {
     }
   } else {
     return name?.toString()?.trim()?.charAt(0)?.toUpperCase();
+  }
+};
+
+export const getFileTypeFromUrl = (fileUrl: string): string | null => {
+  const {JPEG, JPG, PNG, MKV, MP4, PDF} = FILES_TYPES;
+
+  const mimeTypes: Record<string, string> = {
+    jpeg: JPEG,
+    jpg: JPG,
+    png: PNG,
+    pdf: PDF,
+    mp4: MP4,
+    mkv: MKV,
+  };
+
+  try {
+    const fileNameWithExtension = fileUrl.split('/').pop();
+    if (!fileNameWithExtension) {
+      throw new Error('File name could not be extracted from the URL.');
+    }
+
+    const extension = fileNameWithExtension.split('.').pop()?.toLowerCase();
+    if (!extension) {
+      throw new Error('File extension could not be determined.');
+    }
+
+    return mimeTypes[extension] || null;
+  } catch (error) {
+    console.error('Error determining file type:', error);
+    return null;
   }
 };

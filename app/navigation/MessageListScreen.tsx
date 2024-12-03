@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { useContext, useEffect, useRef, useState } from 'react';
+import {useContext, useEffect, useRef, useState} from 'react';
 import {
   FlatList,
   FlatList as FlatListType,
@@ -12,15 +12,15 @@ import {
   View,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { Assets } from '../assets';
+import {Assets} from '../assets';
 import AutoScroll from '../components/AutoScroll';
 import NoDataComponent from '../components/NoDataComponent';
 import ChatBottomInputComponent from '../components/chat/ChatBottomInputComponent';
 import ChatHeaderComponent from '../components/chat/ChatHeaderComponent';
 import MessageItemComponent from '../components/chat/MessageItemComponent';
 import TypingIndicator from '../components/chat/TypingIndicatorDot/TypingIndicator';
-import { ChatContext } from '../context/ChatContext';
-import { SocketContext } from '../context/SocketContext';
+import {ChatContext} from '../context/ChatContext';
+import {SocketContext} from '../context/SocketContext';
 import AppColors from '../utils/AppColors';
 import {
   CHANNEL_TYPE,
@@ -59,8 +59,9 @@ export const MessageListScreen = ({
   additionalFlatListProps,
   listContainer,
   contentContainer,
-  imageData,
-  isAttachmentVisible
+  attachmentData,
+  attachmentCallbackData,
+  isAttachmentVisible,
 }: any) => {
   const {state: socketState}: any = useContext(SocketContext);
   const {state: chatState}: any = useContext(ChatContext);
@@ -211,6 +212,13 @@ export const MessageListScreen = ({
     refMembersListRef?.current?.close();
   };
 
+  {
+    console.log(
+      'MessageListScreen',
+      JSON.stringify(socketState?.channelsMessagesList),
+    );
+  }
+
   const _renderMemberList = () => {
     const data =
       chatMember?.length > 0 ? chatMember : chatState?.selectedChat?.members;
@@ -331,7 +339,7 @@ export const MessageListScreen = ({
           placeholder: placeholder,
           textInputContainerPropsStyle: textInputContainerPropsStyle,
           textInputPropsStyle: textInputPropsStyle,
-          isAttachmentVisible:isAttachmentVisible,
+          isAttachmentVisible: isAttachmentVisible,
           attchmentImage: attchmentImage,
           attachmentImagePropsStyle: attachmentImagePropsStyle,
           sendImage: sendImage,
@@ -347,6 +355,8 @@ export const MessageListScreen = ({
                   : 5,
             },
           ],
+          attachmentData: attachmentData,
+          attachmentCallbackData: attachmentCallbackData,
           onPressAttachment: onPressAttachment,
           onPressSend: _onPressSend,
         }}
