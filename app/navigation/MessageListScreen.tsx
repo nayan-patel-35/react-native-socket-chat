@@ -1,20 +1,20 @@
 import moment from 'moment';
 import { useContext, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   FlatList,
   FlatList as FlatListType,
+  Image,
   Keyboard,
   Platform,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import { openSettings } from 'react-native-permissions';
-import Toast from 'react-native-toast-message';
+import RBSheet from 'react-native-raw-bottom-sheet';
 import { Assets } from '../assets';
 import AutoScroll from '../components/AutoScroll';
 import NoDataComponent from '../components/NoDataComponent';
-import RBSheetComponent from '../components/RBSheetComponent';
 import ChatBottomInputComponent from '../components/chat/ChatBottomInputComponent';
 import ChatHeaderComponent from '../components/chat/ChatHeaderComponent';
 import MessageItemComponent from '../components/chat/MessageItemComponent';
@@ -25,16 +25,10 @@ import AppColors from '../utils/AppColors';
 import {
   CHANNEL_TYPE,
   DEVICE_HEIGHT,
+  generateAvatar,
   isEmpty,
   isIphoneWithNotch,
 } from '../utils/AppConstant';
-import {
-  GetCameraImage,
-  GetCameraVideo,
-  GetGalleryImage,
-  GetGalleryVideo,
-} from '../utils/ImagePicker';
-import { checkExternalFilePermission } from '../utils/LocationServices';
 
 export const MessageListScreen = ({
   channelName,
@@ -65,14 +59,15 @@ export const MessageListScreen = ({
   additionalFlatListProps,
   listContainer,
   contentContainer,
+  imageData,
+  isAttachmentVisible
 }: any) => {
   const {state: socketState}: any = useContext(SocketContext);
   const {state: chatState}: any = useContext(ChatContext);
 
   // .. ref
+  const refMembersListRef: any = useRef(null);
   const flatListRef = useRef<FlatListType | null>(null);
-  const refSelectPhotoVideoSheetRef: any = useRef(null);
-  const refCameraGallerySheetRef: any = useRef(null);
 
   // .. state
   const [channel, setChannel] = useState<any>(null);
@@ -80,8 +75,6 @@ export const MessageListScreen = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [keyboardHeight, setKeyboardHeight] = useState<number>(0);
   const [sendMsgText, setSendMsgText] = useState<string>('');
-  const [isPhotoSelected, setIsPhotoSelected] = useState<boolean>(false);
-  const [isImageProcessing, setIsImageProcessing] = useState<boolean>(false);
 
   const [stickyHeaderDate, setStickyHeaderDate] = useState<Date | undefined>(
     new Date(),
@@ -116,10 +109,6 @@ export const MessageListScreen = ({
 
   const _keyboardDidHide = (e: any) => {
     setKeyboardHeight(0);
-  };
-
-  const _onPressAttachment = () => {
-    refSelectPhotoVideoSheetRef?.current?.open();
   };
 
   const startStopTyping = async type => {
@@ -170,129 +159,6 @@ export const MessageListScreen = ({
     viewAreaCoveragePercentThreshold: 1,
   };
 
-  const checkFilePermission = (type: string) => {
-    checkExternalFilePermission(
-      (grantCamera: any) => {
-        if (grantCamera === 'granted') {
-          if (type === 'Video') {
-            refCameraGallerySheetRef?.current?.open();
-            setIsPhotoSelected(false);
-          }
-
-          if (type === 'Photo') {
-            refCameraGallerySheetRef?.current?.open();
-            setIsPhotoSelected(true);
-          }
-        }
-      },
-      (denied: any) => {
-        if (denied === 'blocked' || denied === 'denied') {
-          Alert.alert(
-            '',
-            Platform.OS == 'android'
-              ? 'File and Media access needed. Go to App Settings, tab Permissions, and tap allow.'
-              : 'File and Media access needed. tab allow',
-            [
-              {
-                text: 'Deny',
-                onPress: () => {},
-                style: 'cancel',
-              },
-              {text: 'Allow', onPress: () => openSettings()},
-            ],
-          );
-        }
-      },
-    );
-  };
-
-  const onSelectCameraGallery = (type: string) => {
-    if (type === 'TakePhoto') {
-      addCameraPhotoVideoHandler();
-    }
-
-    if (type === 'Gallery') {
-      addGalleryPhotoVideoHandler();
-    }
-  };
-
-  const addGalleryPhotoVideoHandler = async () => {
-    refCameraGallerySheetRef?.current?.close();
-    refSelectPhotoVideoSheetRef?.current?.close();
-    setTimeout(async () => {
-      setIsImageProcessing(true);
-      if (isPhotoSelected) {
-        GetGalleryImage(
-          (image: any) => {
-            //  setChatImage([image]);
-            //  setViewImageVideo(true);
-            //  setIsImageProcessing(false);
-          },
-          (error: any) => {
-            setIsImageProcessing(false);
-          },
-        );
-      } else {
-        GetGalleryVideo(
-          (video: any) => {
-            if (video.size > 52428800) {
-              setIsImageProcessing(false);
-              Toast.show({
-                type: 'error',
-                text1: 'Please select video less than 50MBs',
-              });
-            } else {
-              //  setChatImage([video]);
-              //  setViewImageVideo(true);
-              //  setIsImageProcessing(false);
-            }
-          },
-          (error: any) => {
-            setIsImageProcessing(false);
-          },
-        );
-      }
-    }, 800);
-  };
-
-  const addCameraPhotoVideoHandler = async () => {
-    refCameraGallerySheetRef?.current?.close();
-    refSelectPhotoVideoSheetRef?.current?.close();
-    setTimeout(async () => {
-      setIsImageProcessing(true);
-      if (isPhotoSelected) {
-        GetCameraImage(
-          (image: any) => {
-            //  setChatImage([image]);
-            //  setViewImageVideo(true);
-            //  setIsImageProcessing(false);
-          },
-          (error: any) => {
-            //  setIsImageProcessing(false);
-          },
-        );
-      } else {
-        GetCameraVideo(
-          (video: any) => {
-            if (video.size > 52428800) {
-              Toast.show({
-                type: 'error',
-                text1: 'Please select video less than 50MBs',
-              });
-            } else {
-              //  setChatImage([video]);
-              //  setViewImageVideo(true);
-              //  setIsImageProcessing(false);
-            }
-          },
-          (error: any) => {
-            setIsImageProcessing(false);
-          },
-        );
-      }
-    }, 800);
-  };
-
   const renderChannelName = () => {
     // If a channel name is available, use it
     if (!isEmpty(chatState?.selectedChat?.channelName)) {
@@ -337,6 +203,49 @@ export const MessageListScreen = ({
       ? null
       : moment(tStickyHeaderDate).format(stickyHeaderFormatDate);
 
+  const _onPressMember = () => {
+    onPressMember ? onPressMember() : refMembersListRef?.current?.open();
+  };
+
+  const _onPressCloseMemberListSheet = () => {
+    refMembersListRef?.current?.close();
+  };
+
+  const _renderMemberList = () => {
+    const data =
+      chatMember?.length > 0 ? chatMember : chatState?.selectedChat?.members;
+
+    const renderItem = ({item}) => (
+      <TouchableOpacity
+        activeOpacity={1}
+        style={styles.membersListContainerStyle}>
+        <View style={styles.avtarHeadImageStyle}>
+          <Text style={styles.avtarHeadTextStyle}>
+            {generateAvatar(`${item?.firstName ?? ''} ${item?.lastName ?? ''}`)}
+          </Text>
+        </View>
+        <Text style={styles.membersNameTextStyle}>
+          {`${item?.firstName ?? ''} ${item?.lastName ?? ''}`}
+        </Text>
+        <Text style={styles.groupAdminTextStyle}>
+          {chatState?.selectedChat?.createdById === item?._id
+            ? ` (Group Admin)`
+            : ''}
+        </Text>
+      </TouchableOpacity>
+    );
+
+    return (
+      <FlatList
+        data={data}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={{paddingBottom: 20}}
+      />
+    );
+  };
+
   return (
     <View style={styles.container}>
       <ChatHeaderComponent
@@ -346,17 +255,22 @@ export const MessageListScreen = ({
         chatMember={
           chatMember && chatMember?.length > 0
             ? chatMember
-            : chatState?.selectedChat?.members?.filter(
-                (item: any, index: number) => {
-                  return item?._id != socketState?.user?._id;
-                },
-              )
+            : chatState?.selectedChat?.members
+          // ?.filter(
+          //     (item: any, index: number) => {
+          //       return item?._id != socketState?.user?._id;
+          //     },
+          //   )
         }
         receiverUserData={receiverUserData}
         titleHeadTextPropsStyle={titleHeadTextPropsStyle}
         subTitleTextPropsStyle={subTitleTextPropsStyle}
         backImagePropsStyle={backImagePropsStyle}
-        onPressMember={onPressMember}
+        onPressMember={() =>
+          chatState?.selectedChat?.channelType === CHANNEL_TYPE.GROUP
+            ? _onPressMember()
+            : undefined
+        }
       />
 
       <View
@@ -417,6 +331,7 @@ export const MessageListScreen = ({
           placeholder: placeholder,
           textInputContainerPropsStyle: textInputContainerPropsStyle,
           textInputPropsStyle: textInputPropsStyle,
+          isAttachmentVisible:isAttachmentVisible,
           attchmentImage: attchmentImage,
           attachmentImagePropsStyle: attachmentImagePropsStyle,
           sendImage: sendImage,
@@ -437,21 +352,31 @@ export const MessageListScreen = ({
         }}
       />
 
-      <RBSheetComponent
-        inputRef={refSelectPhotoVideoSheetRef}
-        title={''}
-        isChatSelection={true}
-        height={DEVICE_HEIGHT / 3.25}
-        onPressType={checkFilePermission}>
-        <RBSheetComponent
-          inputRef={refCameraGallerySheetRef}
-          title={''}
-          animationType={'none'}
-          isChatSelection={false}
-          height={DEVICE_HEIGHT / 3.25}
-          onPressType={onSelectCameraGallery}
-        />
-      </RBSheetComponent>
+      <RBSheet
+        ref={refMembersListRef}
+        openDuration={250}
+        animationType={'slide'}
+        height={DEVICE_HEIGHT / 2}
+        closeOnDragDown={false}
+        closeOnPressMask={true}
+        customStyles={{
+          container: styles.rbsheetContainerStyle,
+        }}>
+        <View style={styles.rbSheetSubContainer}>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            style={styles.closeIconStyle}
+            onPress={_onPressCloseMemberListSheet}>
+            <Image
+              source={Assets.close_black_icon}
+              style={{width: 25, height: 25}}
+              resizeMode={'contain'}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headTextStyle}>{'Members'}</Text>
+          {_renderMemberList()}
+        </View>
+      </RBSheet>
     </View>
   );
 };
@@ -522,5 +447,61 @@ const styles = StyleSheet.create({
   contentContainer: {
     flexGrow: 1,
     paddingBottom: 4,
+  },
+
+  rbsheetContainerStyle: {
+    justifyContent: 'center',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+
+  rbSheetSubContainer: {flex: 1, marginHorizontal: '5%'},
+
+  closeIconStyle: {
+    padding: '1.5%',
+    marginTop: 2.5,
+    alignItems: 'flex-end',
+  },
+
+  headTextStyle: {
+    fontSize: 18,
+    lineHeight: 18,
+    color: AppColors.black,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginTop: 1,
+    marginBottom: 2,
+  },
+
+  membersListContainerStyle: {
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  membersNameTextStyle: {
+    fontSize: 15,
+    color: AppColors.black,
+  },
+
+  groupAdminTextStyle: {
+    fontSize: 12,
+    color: AppColors.dark_gray,
+  },
+
+  avtarHeadImageStyle: {
+    width: 38,
+    height: 38,
+    borderRadius: 100,
+    marginRight: 10,
+    backgroundColor: AppColors.border_color,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  avtarHeadTextStyle: {
+    fontSize: 14,
+    color: AppColors.black,
+    fontWeight: 'semibold',
   },
 });

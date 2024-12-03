@@ -1,6 +1,7 @@
 import moment from 'moment';
-import React, { useContext } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import {
+  Alert,
   Image,
   ImageStyle,
   Platform,
@@ -13,11 +14,22 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { openSettings } from 'react-native-permissions';
+import Toast from 'react-native-toast-message';
 import { Assets } from '../../assets';
+import RBSheetComponent from '../../components/RBSheetComponent';
 import { ChatContext } from '../../context/ChatContext';
 import { SocketContext } from '../../context/SocketContext';
 import AppColors from '../../utils/AppColors';
-import { isEmpty } from '../../utils/AppConstant';
+import { DEVICE_HEIGHT, isEmpty } from '../../utils/AppConstant';
+import {
+  GetCameraVideo,
+  GetGalleryImage,
+  GetGalleryVideo,
+  GetImageParams,
+} from '../../utils/ImagePicker';
+import { checkExternalFilePermission } from '../../utils/LocationServices';
+import { uploadImage } from '../../utils/UploadImage';
 
 interface ChatBottomInputComponentProps {
   props: {
@@ -29,11 +41,13 @@ interface ChatBottomInputComponentProps {
     placeholder?: string;
     textInputContainerPropsStyle?: StyleProp<ViewStyle>;
     textInputPropsStyle?: StyleProp<TextStyle>;
+    isAttachmentVisible?:boolean;
     attchmentImage?: Image;
     attachmentImagePropsStyle?: StyleProp<ImageStyle>;
     sendImage?: Image;
     sendImagePropsStyle?: StyleProp<ImageStyle>;
     keyboardViewPropsStyle?: StyleProp<ViewStyle>;
+    imageData?: any;
     onPressAttachment?: () => void;
     onPressSend: () => void;
     children?: React.ReactNode;
@@ -50,16 +64,26 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
     placeholder,
     textInputContainerPropsStyle,
     textInputPropsStyle,
+    isAttachmentVisible,
     attchmentImage,
     attachmentImagePropsStyle,
     sendImage,
     sendImagePropsStyle,
     keyboardViewPropsStyle,
+    imageData,
     onPressAttachment,
     onPressSend,
   } = props;
   const {state: socketState, appendMessages}: any = useContext(SocketContext);
   const {state: chatState}: any = useContext(ChatContext);
+
+  // .. ref
+  const refSelectPhotoVideoSheetRef: any = useRef(null);
+  const refCameraGallerySheetRef: any = useRef(null);
+
+  // .. state
+  const [isPhotoSelected, setIsPhotoSelected] = useState<boolean>(false);
+  const [isImageProcessing, setIsImageProcessing] = useState<boolean>(false);
 
   const _onPressSend = () => {
     onPressSend?.();
@@ -113,11 +137,224 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
     onChangeText?.(e);
   };
 
+  const _onPressAttachment = () => {
+    if (isAttachmentVisible) {
+      console.log('IF',);
+      onPressAttachment?.();
+    } else {
+      console.log('ELSE',);
+      refSelectPhotoVideoSheetRef?.current?.open();
+    }
+  };
+
+  const checkFilePermission = (type: string) => {
+    checkExternalFilePermission(
+      (grantCamera: any) => {
+        if (grantCamera === 'granted') {
+          if (type === 'Video') {
+            refCameraGallerySheetRef?.current?.open();
+            setIsPhotoSelected(false);
+          }
+
+          if (type === 'Photo') {
+            refCameraGallerySheetRef?.current?.open();
+            setIsPhotoSelected(true);
+          }
+        }
+      },
+      (denied: any) => {
+        if (denied === 'blocked' || denied === 'denied') {
+          Alert.alert(
+            '',
+            Platform.OS == 'android'
+              ? 'File and Media access needed. Go to App Settings, tab Permissions, and tap allow.'
+              : 'File and Media access needed. tab allow',
+            [
+              {
+                text: 'Deny',
+                onPress: () => {},
+                style: 'cancel',
+              },
+              {text: 'Allow', onPress: () => openSettings()},
+            ],
+          );
+        }
+      },
+    );
+  };
+
+  const onSelectCameraGallery = (type: string) => {
+    if (type === 'TakePhoto') {
+      addCameraPhotoVideoHandler();
+    }
+
+    if (type === 'Gallery') {
+      addGalleryPhotoVideoHandler();
+    }
+  };
+
+  const addGalleryPhotoVideoHandler = async () => {
+    refCameraGallerySheetRef?.current?.close();
+    refSelectPhotoVideoSheetRef?.current?.close();
+    setTimeout(async () => {
+      setIsImageProcessing(true);
+      if (isPhotoSelected) {
+        GetGalleryImage(
+          async (image: any) => {
+            setTimeout(() => {
+              setIsImageProcessing?.(true);
+            }, 800);
+            GetImageParams(
+              [image],
+              async (imageParam: any) => {
+                let response: any = await uploadImage(imageParam);
+                console.log('response', JSON.stringify(response));
+                if (response?.success) {
+                  imageData?.({
+                    ...imageParam,
+                    imageData: response?.data?.[0],
+                    url: response?.data?.[0]?.fileUrl,
+                  });
+                  setTimeout(() => {
+                    setIsImageProcessing?.(false);
+                  }, 1000);
+                } else {
+                  setTimeout(() => {
+                    setIsImageProcessing?.(false);
+                  }, 1000);
+                }
+              },
+              (error: any) => {
+                setTimeout(() => {
+                  setIsImageProcessing?.(false);
+                }, 1000);
+              },
+            );
+          },
+          (error: any) => {
+            setTimeout(() => {
+              setIsImageProcessing?.(false);
+            }, 1000);
+          },
+        );
+      } else {
+        GetGalleryVideo(
+          async (video: any) => {
+            if (video.size > 52428800) {
+              setIsImageProcessing(false);
+              Toast.show({
+                type: 'error',
+                text1: 'Please select video less than 50MBs',
+              });
+            } else {
+              let response: any = await uploadImage(video);
+              if (response?.success) {
+                imageData?.({
+                  ...video,
+                  imageData: response?.data?.[0],
+                  url: response?.data?.[0]?.fileUrl,
+                });
+                setTimeout(() => {
+                  setIsImageProcessing?.(false);
+                }, 1000);
+              } else {
+                setTimeout(() => {
+                  setIsImageProcessing?.(false);
+                }, 1000);
+              }
+            }
+          },
+          (error: any) => {
+            setIsImageProcessing(false);
+          },
+        );
+      }
+    }, 800);
+  };
+
+  const addCameraPhotoVideoHandler = async () => {
+    refCameraGallerySheetRef?.current?.close();
+    refSelectPhotoVideoSheetRef?.current?.close();
+    setTimeout(async () => {
+      setIsImageProcessing(true);
+      if (isPhotoSelected) {
+        GetGalleryImage(
+          async (image: any) => {
+            setTimeout(() => {
+              setIsImageProcessing?.(true);
+            }, 800);
+            GetImageParams(
+              [image],
+              async (imageParam: any) => {
+                let response: any = await uploadImage(imageParam);
+                console.log('response', JSON.stringify(response));
+                if (response?.success) {
+                  imageData?.({
+                    ...imageParam,
+                    imageData: response?.data?.[0],
+                    url: response?.data?.[0]?.fileUrl,
+                  });
+                  setTimeout(() => {
+                    setIsImageProcessing?.(false);
+                  }, 1000);
+                } else {
+                  setTimeout(() => {
+                    setIsImageProcessing?.(false);
+                  }, 1000);
+                }
+              },
+              (error: any) => {
+                setTimeout(() => {
+                  setIsImageProcessing?.(false);
+                }, 1000);
+              },
+            );
+          },
+          (error: any) => {
+            setTimeout(() => {
+              setIsImageProcessing?.(false);
+            }, 1000);
+          },
+        );
+      } else {
+        GetCameraVideo(
+          async (video: any) => {
+            if (video.size > 52428800) {
+              Toast.show({
+                type: 'error',
+                text1: 'Please select video less than 50MBs',
+              });
+            } else {
+              let response: any = await uploadImage(video);
+              if (response?.success) {
+                imageData?.({
+                  ...video,
+                  imageData: response?.data?.[0],
+                  url: response?.data?.[0]?.fileUrl,
+                });
+                setTimeout(() => {
+                  setIsImageProcessing?.(false);
+                }, 1000);
+              } else {
+                setTimeout(() => {
+                  setIsImageProcessing?.(false);
+                }, 1000);
+              }
+            }
+          },
+          (error: any) => {
+            setIsImageProcessing(false);
+          },
+        );
+      }
+    }, 800);
+  };
+
   return (
     <View style={[styles.keyboardViewStyle, keyboardViewPropsStyle]}>
-      {onPressAttachment ? (
+      {isAttachmentVisible ? (
         <Pressable
-          onPress={onPressAttachment}
+          onPress={_onPressAttachment}
           style={styles.attachmentViewStyle}>
           <Image
             style={[styles.attachmentImageStyle, attachmentImagePropsStyle]}
@@ -161,6 +398,22 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
           }
         />
       </Pressable>
+
+      <RBSheetComponent
+        inputRef={refSelectPhotoVideoSheetRef}
+        title={''}
+        isChatSelection={true}
+        height={DEVICE_HEIGHT / 3.25}
+        onPressType={checkFilePermission}>
+        <RBSheetComponent
+          inputRef={refCameraGallerySheetRef}
+          title={''}
+          animationType={'none'}
+          isChatSelection={false}
+          height={DEVICE_HEIGHT / 3.25}
+          onPressType={onSelectCameraGallery}
+        />
+      </RBSheetComponent>
     </View>
   );
 };

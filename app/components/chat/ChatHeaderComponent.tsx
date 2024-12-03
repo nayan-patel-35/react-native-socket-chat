@@ -42,6 +42,7 @@ const ChatHeaderComponent = ({
   onPressMember,
   children,
 }: ChatHeaderComponentProps) => {
+
   const lastActiveTime = receiverUserData?.[0]?.user?.last_active;
   const isOnline = receiverUserData?.[0]?.user?.online;
 
@@ -66,10 +67,6 @@ const ChatHeaderComponent = ({
       <Text style={styles.subTitleTextStyle}>Last seen on {formattedTime}</Text>
     );
   };
-
-  {
-    console.log('channelName', JSON.stringify(channelName));
-  }
 
   return (
     <>

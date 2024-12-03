@@ -1,28 +1,40 @@
 import { Platform } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
 
-let paramPermission =
-  Platform.OS == 'ios'
-    ? PERMISSIONS.IOS.LOCATION_ALWAYS
-    : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
+const paramPermission: string = Platform.select({
+  ios: PERMISSIONS.IOS.LOCATION_ALWAYS,
+  android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+}) as string;
 
-let microphonePermission =
-  Platform.OS === 'android'
-    ? PERMISSIONS.ANDROID.RECORD_AUDIO
-    : PERMISSIONS.IOS.MICROPHONE;
+const microphonePermission: string = Platform.select({
+  ios: PERMISSIONS.IOS.MICROPHONE,
+  android: PERMISSIONS.ANDROID.RECORD_AUDIO,
+}) as string;
 
-let cameraPermission =
-  Platform.OS === 'android'
-    ? PERMISSIONS.ANDROID.CAMERA
-    : PERMISSIONS.IOS.CAMERA;
+const cameraPermission: string = Platform.select({
+  ios: PERMISSIONS.IOS.CAMERA,
+  android: PERMISSIONS.ANDROID.CAMERA,
+}) as string;
 
-let filePermission =
-  Platform.OS === 'android'
-    ? PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE
-    : PERMISSIONS.IOS.PHOTO_LIBRARY;
+const filePermission: string = Platform.select({
+  ios: PERMISSIONS.IOS.PHOTO_LIBRARY,
+  android:
+    DeviceInfo.getSystemVersion() >= '13'
+      ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES
+      : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
+}) as string;
 
-export async function requestLocationPermission(onSuccess:any, onFailure:any) {
-  request(paramPermission).then((result:any) => {
+const notificationPermission: string = Platform.select({
+  ios: '',
+  android: PERMISSIONS.ANDROID.POST_NOTIFICATIONS,
+}) as string;
+
+export async function requestLocationPermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  request(paramPermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         onFailure(result);
@@ -39,8 +51,8 @@ export async function requestLocationPermission(onSuccess:any, onFailure:any) {
     }
   });
 }
-export async function checkLocationPermission(onSuccess:any, onFailure:any) {
-  check(paramPermission).then((result:any) => {
+export async function checkLocationPermission(onSuccess: any, onFailure: any) {
+  check(paramPermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         requestLocationPermission(onSuccess, onFailure);
@@ -58,8 +70,8 @@ export async function checkLocationPermission(onSuccess:any, onFailure:any) {
   });
 }
 
-export async function checkPermission(onSuccess:any, onFailure:any) {
-  check(paramPermission).then((result:any) => {
+export async function checkPermission(onSuccess: any, onFailure: any) {
+  check(paramPermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         onFailure(result);
@@ -77,8 +89,11 @@ export async function checkPermission(onSuccess:any, onFailure:any) {
   });
 }
 
-export async function requestMicroPhonePermission(onSuccess:any, onFailure:any) {
-  request(microphonePermission).then((result:any) => {
+export async function requestMicroPhonePermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  request(microphonePermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         onFailure(result);
@@ -95,8 +110,11 @@ export async function requestMicroPhonePermission(onSuccess:any, onFailure:any) 
     }
   });
 }
-export async function checkMicroPhonePermission(onSuccess:any, onFailure:any) {
-  check(microphonePermission).then((result:any) => {
+export async function checkMicroPhonePermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  check(microphonePermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         requestMicroPhonePermission(onSuccess, onFailure);
@@ -114,8 +132,11 @@ export async function checkMicroPhonePermission(onSuccess:any, onFailure:any) {
   });
 }
 
-export async function requestCameraPhonePermission(onSuccess:any, onFailure:any) {
-  request(cameraPermission).then((result:any) => {
+export async function requestCameraPhonePermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  request(cameraPermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         onFailure(result);
@@ -132,8 +153,11 @@ export async function requestCameraPhonePermission(onSuccess:any, onFailure:any)
     }
   });
 }
-export async function checkCameraPhonePermission(onSuccess:any, onFailure:any) {
-  check(cameraPermission).then((result:any) => {
+export async function checkCameraPhonePermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  check(cameraPermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         requestCameraPhonePermission(onSuccess, onFailure);
@@ -151,8 +175,11 @@ export async function checkCameraPhonePermission(onSuccess:any, onFailure:any) {
   });
 }
 
-export async function requestExternalFilePermission(onSuccess:any, onFailure:any) {
-  request(filePermission).then((result:any) => {
+export async function requestExternalFilePermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  request(filePermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         onFailure(result);
@@ -170,8 +197,11 @@ export async function requestExternalFilePermission(onSuccess:any, onFailure:any
   });
 }
 
-export async function checkExternalFilePermission(onSuccess:any, onFailure:any) {
-  check(filePermission).then((result:any) => {
+export async function checkExternalFilePermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  check(filePermission).then(result => {
     switch (result) {
       case RESULTS.UNAVAILABLE:
         requestExternalFilePermission(onSuccess, onFailure);
@@ -184,6 +214,50 @@ export async function checkExternalFilePermission(onSuccess:any, onFailure:any) 
         break;
       case RESULTS.BLOCKED:
         requestExternalFilePermission(onSuccess, onFailure);
+        break;
+    }
+  });
+}
+
+export async function requestNotificationPermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  request(notificationPermission).then(result => {
+    switch (result) {
+      case RESULTS.UNAVAILABLE:
+        onFailure(result);
+        break;
+      case RESULTS.DENIED:
+        onFailure(result);
+        break;
+      case RESULTS.GRANTED:
+        onSuccess(result);
+        break;
+      case RESULTS.BLOCKED:
+        onFailure(result);
+        break;
+    }
+  });
+}
+
+export async function checkNotificationPermission(
+  onSuccess: any,
+  onFailure: any,
+) {
+  check(notificationPermission).then(result => {
+    switch (result) {
+      case RESULTS.UNAVAILABLE:
+        requestNotificationPermission(onSuccess, onFailure);
+        break;
+      case RESULTS.DENIED:
+        requestNotificationPermission(onSuccess, onFailure);
+        break;
+      case RESULTS.GRANTED:
+        requestNotificationPermission(onSuccess, onFailure);
+        break;
+      case RESULTS.BLOCKED:
+        requestNotificationPermission(onSuccess, onFailure);
         break;
     }
   });

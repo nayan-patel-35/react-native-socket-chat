@@ -1,6 +1,6 @@
 {
   "name": "react-native-socket-chat",
-  "version": "0.0.16",
+  "version": "0.0.18",
   "description": "This project is the react-native packaging of react-native-socket-chat.",
   "main": "index.js",
   "keywords": [

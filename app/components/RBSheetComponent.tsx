@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -8,9 +8,9 @@ import {
   View,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import {Assets} from '../assets';
+import { Assets } from '../assets';
 import AppColors from '../utils/AppColors';
-import {DEVICE_HEIGHT, DEVICE_WEIGHT, isEmpty} from '../utils/AppConstant';
+import { DEVICE_HEIGHT, DEVICE_WEIGHT, isEmpty } from '../utils/AppConstant';
 
 const ITEM_WIDTH = Math.round(DEVICE_WEIGHT * 0.92);
 
@@ -156,7 +156,7 @@ const RBSheetComponent = (props: any) => {
       animationType={props?.animationType ?? 'slide'}
       height={props?.height ? props?.height : DEVICE_HEIGHT / 2.5}
       closeOnDragDown={false}
-      closeOnPressMask={false}
+      closeOnPressMask={true}
       customStyles={{
         container: styles.rbsheetContainerStyle,
       }}>
@@ -168,7 +168,7 @@ const RBSheetComponent = (props: any) => {
           onPress={onPressClose}>
           <Image
             source={Assets.close_black_icon}
-            style={{width: 13, height: 13}}
+            style={{width: 25, height: 25}}
             resizeMode={'contain'}
           />
         </TouchableOpacity>
