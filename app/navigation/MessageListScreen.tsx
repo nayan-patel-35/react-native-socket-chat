@@ -1,10 +1,11 @@
 import moment from 'moment';
-import {useContext, useEffect, useRef, useState} from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
   FlatList,
   FlatList as FlatListType,
   Image,
   Keyboard,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -12,15 +13,15 @@ import {
   View,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import {Assets} from '../assets';
+import { Assets } from '../assets';
 import AutoScroll from '../components/AutoScroll';
 import NoDataComponent from '../components/NoDataComponent';
 import ChatBottomInputComponent from '../components/chat/ChatBottomInputComponent';
 import ChatHeaderComponent from '../components/chat/ChatHeaderComponent';
 import MessageItemComponent from '../components/chat/MessageItemComponent';
 import TypingIndicator from '../components/chat/TypingIndicatorDot/TypingIndicator';
-import {ChatContext} from '../context/ChatContext';
-import {SocketContext} from '../context/SocketContext';
+import { ChatContext } from '../context/ChatContext';
+import { SocketContext } from '../context/SocketContext';
 import AppColors from '../utils/AppColors';
 import {
   CHANNEL_TYPE,
@@ -142,6 +143,9 @@ export const MessageListScreen = ({
             item: subItem,
             index: subIndex,
             date: item?.date,
+            onPressDownload: url => {
+              Linking.openURL(url);
+            },
           }}
         />
       );

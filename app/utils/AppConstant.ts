@@ -40,6 +40,8 @@ export const FILES_TYPES = {
   PDF: 'application/pdf',
 };
 
+export const EMOJIS = ['🤘', '🤪', '😡', '😂', '😭'];
+
 export function isIphoneWithNotch() {
   const dimen = Dimensions.get('window');
   return (
@@ -199,4 +201,14 @@ export const getFileTypeFromUrl = (fileUrl: string): string | null => {
     console.error('Error determining file type:', error);
     return null;
   }
+};
+
+export const getUrlExtension = (url: any) => {
+  return url
+    ?.toString()
+    ?.toLowerCase()
+    ?.split(/[#?]/)[0]
+    .split('.')
+    .pop()
+    .trim();
 };

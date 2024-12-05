@@ -17,12 +17,18 @@ import {
 } from 'react-native';
 import {openSettings} from 'react-native-permissions';
 import Toast from 'react-native-toast-message';
+import Video from 'react-native-video';
 import {Assets} from '../../assets';
 import RBSheetComponent from '../../components/RBSheetComponent';
 import {ChatContext} from '../../context/ChatContext';
 import {SocketContext} from '../../context/SocketContext';
 import AppColors from '../../utils/AppColors';
-import {DEVICE_HEIGHT, isEmpty} from '../../utils/AppConstant';
+import {
+  DEVICE_HEIGHT,
+  FILES_TYPES,
+  getFileTypeFromUrl,
+  isEmpty,
+} from '../../utils/AppConstant';
 import {
   GetCameraImage,
   GetCameraVideo,
@@ -290,22 +296,51 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={(_, index) => index.toString()}
-          renderItem={({item, index}) => (
-            <View style={styles.imageMainContainerStyle}>
-              <Pressable
-                style={styles.deleteIconViewStyle}
-                onPress={() => handleDeleteFile(index)}>
-                <Image
-                  source={Assets.close_black_icon}
-                  style={styles.deleteImageStyle}
-                />
-              </Pressable>
-              <Image
-                source={{uri: item?.fileUrl}}
-                style={styles.imageViewStyle}
-              />
-            </View>
-          )}
+          renderItem={({item, index}) => {
+            const fileType = getFileTypeFromUrl(item?.fileUrl);
+
+            const RenderMedia = () => {
+              switch (fileType) {
+                case FILES_TYPES.JPEG:
+                case FILES_TYPES.JPG:
+                case FILES_TYPES.PNG:
+                  return (
+                    <Image
+                      source={{uri: item?.fileUrl}}
+                      style={styles.imageViewStyle}
+                    />
+                  );
+                case FILES_TYPES.MP4:
+                case FILES_TYPES.MKV:
+                  return (
+                    <Video
+                      repeat
+                      muted
+                      controls={Platform.OS === 'ios'}
+                      resizeMode="cover"
+                      source={{uri: item?.fileUrl}}
+                      style={styles.imageViewStyle}
+                    />
+                  );
+                default:
+                  return null;
+              }
+            };
+
+            return (
+              <View style={styles.imageMainContainerStyle}>
+                <Pressable
+                  style={styles.deleteIconViewStyle}
+                  onPress={() => handleDeleteFile(index)}>
+                  <Image
+                    source={Assets.close_black_icon}
+                    style={styles.deleteImageStyle}
+                  />
+                </Pressable>
+                <RenderMedia />
+              </View>
+            );
+          }}
         />
 
         <View style={{flexDirection: 'row'}}>
@@ -332,7 +367,7 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
               placeholderTextColor={
                 placeholderTextColor ? placeholderTextColor : 'gray'
               }
-              placeholder={placeholder ? placeholder : 'Type your message...'}
+              placeholder={placeholder ? placeholder : 'Write your message...'}
               style={[styles.textInputStyle, textInputPropsStyle]}
               {...textInputProps}
             />
