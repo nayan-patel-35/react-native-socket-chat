@@ -1,5 +1,5 @@
 import moment from 'moment';
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -15,15 +15,16 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {openSettings} from 'react-native-permissions';
+import { openSettings } from 'react-native-permissions';
 import Toast from 'react-native-toast-message';
 import Video from 'react-native-video';
-import {Assets} from '../../assets';
+import { Assets } from '../../assets';
 import RBSheetComponent from '../../components/RBSheetComponent';
-import {ChatContext} from '../../context/ChatContext';
-import {SocketContext} from '../../context/SocketContext';
+import { ChatContext } from '../../context/ChatContext';
+import { SocketContext } from '../../context/SocketContext';
 import AppColors from '../../utils/AppColors';
 import {
+  CHANNEL_TYPE,
   DEVICE_HEIGHT,
   FILES_TYPES,
   getFileTypeFromUrl,
@@ -36,7 +37,7 @@ import {
   GetGalleryVideo,
   GetImageParams,
 } from '../../utils/ImagePicker';
-import {checkExternalFilePermission} from '../../utils/LocationServices';
+import { checkExternalFilePermission } from '../../utils/LocationServices';
 
 interface ChatBottomInputComponentProps {
   props: {
@@ -62,7 +63,7 @@ interface ChatBottomInputComponentProps {
   };
 }
 
-const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
+const ChatBottomInputComponent = ({ props }: ChatBottomInputComponentProps) => {
   const {
     value,
     onChangeText,
@@ -83,13 +84,14 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
     onPressAttachment,
     onPressSend,
   } = props;
-  const {state: socketState, appendMessages}: any = useContext(SocketContext);
-  const {state: chatState}: any = useContext(ChatContext);
+  const { state: socketState, appendMessages }: any = useContext(SocketContext);
+  const { state: chatState }: any = useContext(ChatContext);
 
   // .. ref
   const refSelectPhotoVideoSheetRef: any = useRef(null);
   const refCameraGallerySheetRef: any = useRef(null);
 
+  console.log('chatState', chatState);
   // .. state
   const [isPhotoSelected, setIsPhotoSelected] = useState<boolean>(false);
   const [files, setFiles] = useState<any[]>([]);
@@ -106,46 +108,92 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
       (item: any) => item?._id != socketState?.user?._id,
     );
 
-    if (files?.length == 0 && !isEmpty(value?.toString()?.trim())) {
-      const chatPayload = {
+    let chatPayload: any = null;
+    // For one to one channel
+    if (chatState.selectedChat?.channelType === CHANNEL_TYPE.CHAT) {
+      chatPayload = {
         content: value,
-        messageType: 'Chat',
-        status: 'online',
-        // isSystem: false,
-        user: receiverData?._id,
         sender: socketState?.user?._id,
-        to: receiverData?._id,
+        messageType: CHANNEL_TYPE.CHAT,
         from: socketState?.user?._id,
-        channelId: chatState?.selectedChat?.channelId,
-        type: 'channel',
       };
-      socketState?.socketClient?.emit('message', chatPayload);
-
-      const tempData = {
+    } else {
+      // For group channel
+      chatPayload = {
         content: value,
-        messageType: 'Chat',
-        status: 'online',
-        // isSystem: false,
-        user: receiverData?._id,
-        to: receiverData?._id,
-        from: socketState?.user?._id,
-        sender: {
-          _id: socketState?.user?._id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          fullName: socketState?.user?.name,
-          email: socketState?.user?.email,
-        },
-        channelId: chatState?.selectedChat?.channelId,
-        type: 'channel',
+        sender: socketState?.user?._id,
+        // to: chatState?.selectedChat?.members?.find(
+        //   (item: any) => item?._id != socketState?.user?._id,
+        // )?._id,
+        // from: socketState?.user?._id,
+        messageType: CHANNEL_TYPE.GROUP,
+        channelId: chatState?.selectedChat?._id || '',
+      };
+    }
+
+    // Set active channel
+    if (chatState?.selectedChat?.channelId) {
+      chatPayload.channelId = chatState?.selectedChat?.channelId;
+    }
+
+    // Add attachments
+    if (files?.length > 0) {
+      chatPayload.attachments = files || [];
+    }
+
+    console.log('chatPayload', JSON.stringify(chatPayload));
+    socketState?.socketClient?.emit('message', chatPayload);
+
+    const tempData = {
+      content: value,
+      status: 'online',
+      // isSystem: false,
+      user: receiverData?._id,
+      to: receiverData?._id,
+      from: socketState?.user?._id,
+      sender: {
+        _id: socketState?.user?._id,
         createdAt: new Date(),
         updatedAt: new Date(),
-        date: moment(new Date()).format('YYYY-MM-DD'),
-        _id: moment(new Date()).format('YYYY-MM-DD'),
-      };
+        fullName: socketState?.user?.name,
+        email: socketState?.user?.email,
+      },
+      channelId: chatState?.selectedChat?.channelId,
+      type: 'channel',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      date: moment(new Date()).format('YYYY-MM-DD'),
+      _id: moment(new Date()).format('YYYY-MM-DD'),
+    };
 
-      appendMessages(tempData);
-    }
+    appendMessages(tempData);
+    return;
+    const latestMsg = {
+      date: moment(new Date()).format('YYYY-MM-DD'),
+      list: [
+        {
+          channelId: chatState?.selectedChat?.channelId,
+          content: value,
+          createdAt: new Date(),
+          date: moment(new Date()).format('YYYY-MM-DD'),
+          sender: {
+            _id: socketState?.user?._id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            fullName: socketState?.user?.name,
+            email: socketState?.user?.email,
+          },
+          status: 'sent',
+          updatedAt: new Date(),
+          //  reactions: type === 'Reaction' ? [data?.emoji] : [{}],
+        },
+      ],
+      type: 'channel',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      _id: moment(new Date()).format('YYYY-MM-DD'),
+    };
+
     if (files?.length > 0) {
       const chatPayload = {
         content: 'Attachment',
@@ -221,8 +269,8 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
               ? 'File and Media access needed. Go to App Settings, tap Permissions, and allow access.'
               : 'File and Media access needed. Tap allow.',
             [
-              {text: 'Deny', onPress: () => {}, style: 'cancel'},
-              {text: 'Allow', onPress: openSettings},
+              { text: 'Deny', onPress: () => {}, style: 'cancel' },
+              { text: 'Allow', onPress: openSettings },
             ],
           );
         }
@@ -296,7 +344,7 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={(_, index) => index.toString()}
-          renderItem={({item, index}) => {
+          renderItem={({ item, index }) => {
             const fileType = getFileTypeFromUrl(item?.fileUrl);
 
             const RenderMedia = () => {
@@ -306,7 +354,7 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
                 case FILES_TYPES.PNG:
                   return (
                     <Image
-                      source={{uri: item?.fileUrl}}
+                      source={{ uri: item?.fileUrl }}
                       style={styles.imageViewStyle}
                     />
                   );
@@ -318,7 +366,7 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
                       muted
                       controls={Platform.OS === 'ios'}
                       resizeMode="cover"
-                      source={{uri: item?.fileUrl}}
+                      source={{ uri: item?.fileUrl }}
                       style={styles.imageViewStyle}
                     />
                   );
@@ -343,7 +391,7 @@ const ChatBottomInputComponent = ({props}: ChatBottomInputComponentProps) => {
           }}
         />
 
-        <View style={{flexDirection: 'row'}}>
+        <View style={{ flexDirection: 'row' }}>
           {isAttachmentVisible ? (
             <Pressable
               onPress={_onPressAttachment}

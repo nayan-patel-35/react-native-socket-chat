@@ -64,8 +64,8 @@ export const MessageListScreen = ({
   attachmentCallbackData,
   isAttachmentVisible,
 }: any) => {
-  const {state: socketState}: any = useContext(SocketContext);
-  const {state: chatState}: any = useContext(ChatContext);
+  const { state: socketState }: any = useContext(SocketContext);
+  const { state: chatState }: any = useContext(ChatContext);
 
   // .. ref
   const refMembersListRef: any = useRef(null);
@@ -123,6 +123,7 @@ export const MessageListScreen = ({
   };
 
   const _onPressSend = () => {
+    onPressSend?.();
     setSendMsgText('');
   };
 
@@ -135,7 +136,7 @@ export const MessageListScreen = ({
     }
   };
 
-  const _renderMessageItem = ({item, mainIndex}: any) => {
+  const _renderMessageItem = ({ item, mainIndex }: any) => {
     return item?.list?.map((subItem: any, subIndex: number) => {
       return (
         <MessageItemComponent
@@ -216,18 +217,11 @@ export const MessageListScreen = ({
     refMembersListRef?.current?.close();
   };
 
-  {
-    console.log(
-      'MessageListScreen',
-      JSON.stringify(socketState?.channelsMessagesList),
-    );
-  }
-
   const _renderMemberList = () => {
     const data =
       chatMember?.length > 0 ? chatMember : chatState?.selectedChat?.members;
 
-    const renderItem = ({item}) => (
+    const renderItem = ({ item }) => (
       <TouchableOpacity
         activeOpacity={1}
         style={styles.membersListContainerStyle}>
@@ -253,7 +247,7 @@ export const MessageListScreen = ({
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={{paddingBottom: 20}}
+        contentContainerStyle={{ paddingBottom: 20 }}
       />
     );
   };
@@ -383,7 +377,7 @@ export const MessageListScreen = ({
             onPress={_onPressCloseMemberListSheet}>
             <Image
               source={Assets.close_black_icon}
-              style={{width: 25, height: 25}}
+              style={{ width: 25, height: 25 }}
               resizeMode={'contain'}
             />
           </TouchableOpacity>
@@ -469,7 +463,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
   },
 
-  rbSheetSubContainer: {flex: 1, marginHorizontal: '5%'},
+  rbSheetSubContainer: { flex: 1, marginHorizontal: '5%' },
 
   closeIconStyle: {
     padding: '1.5%',

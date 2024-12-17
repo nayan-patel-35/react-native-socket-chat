@@ -1,4 +1,4 @@
-import {Dimensions, Linking, Platform} from 'react-native';
+import { Dimensions, Linking, Platform } from 'react-native';
 
 export const DEVICE_HEIGHT = Dimensions.get('screen').height;
 export const DEVICE_WEIGHT = Dimensions.get('screen').width;
@@ -174,7 +174,7 @@ export const generateAvatar = (name: string) => {
 };
 
 export const getFileTypeFromUrl = (fileUrl: string): string | null => {
-  const {JPEG, JPG, PNG, MKV, MP4, PDF} = FILES_TYPES;
+  const { JPEG, JPG, PNG, MKV, MP4, PDF } = FILES_TYPES;
 
   const mimeTypes: Record<string, string> = {
     jpeg: JPEG,
@@ -211,4 +211,15 @@ export const getUrlExtension = (url: any) => {
     .split('.')
     .pop()
     .trim();
+};
+
+export const getTrimTitle = (title: string, maxLength: number) => {
+  if (title.length <= maxLength) {
+    return title; // No need to trim if it's already short enough
+  }
+  const extensionIndex = title.lastIndexOf('.');
+  const extension = extensionIndex !== -1 ? title.slice(extensionIndex) : '';
+  const baseName = extension ? title.slice(0, extensionIndex) : title;
+  const trimmedName = baseName.slice(0, maxLength - 3 - extension.length);
+  return `${trimmedName}...${extension}`;
 };

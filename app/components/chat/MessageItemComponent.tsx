@@ -1,5 +1,5 @@
 import Clipboard from '@react-native-clipboard/clipboard';
-import {useContext} from 'react';
+import React, { useContext } from 'react';
 import {
   Image,
   Platform,
@@ -11,12 +11,13 @@ import {
 import FastImage from 'react-native-fast-image';
 import Toast from 'react-native-toast-message';
 import Video from 'react-native-video';
-import {Assets} from '../../assets';
-import {SocketContext} from '../../context/SocketContext';
+import { Assets } from '../../assets';
+import { SocketContext } from '../../context/SocketContext';
 import AppColors from '../../utils/AppColors';
 import {
   FILES_TYPES,
   getFileTypeFromUrl,
+  getTrimTitle,
   getUrlExtension,
   isEmpty,
   IsOpenURL,
@@ -38,10 +39,16 @@ interface MessageItemComponentProps {
   };
 }
 
-const MessageItemComponent = ({props}: MessageItemComponentProps) => {
-  const {item, index, date, onOpenChatImage, onOpenChatVideo, onPressDownload} =
-    props;
-  const {state: socketState}: any = useContext(SocketContext);
+const MessageItemComponent = ({ props }: MessageItemComponentProps) => {
+  const {
+    item,
+    index,
+    date,
+    onOpenChatImage,
+    onOpenChatVideo,
+    onPressDownload,
+  } = props;
+  const { state: socketState }: any = useContext(SocketContext);
 
   let senderId: string = item?.sender?._id;
   let currentUserId: string = socketState?.user?._id;
@@ -64,7 +71,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
   const renderVideoViewItem = (attachments: any) => {
     return (
       <>
-        <View style={{marginTop: 10}}>
+        <View style={{ marginTop: 10 }}>
           <View
             style={{
               alignSelf: senderId == currentUserId ? 'flex-end' : 'flex-start',
@@ -82,7 +89,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
                 controls={Platform.OS == 'ios' ? true : false}
                 paused
                 resizeMode="cover"
-                source={{uri: attachments?.fileUrl}}
+                source={{ uri: attachments?.fileUrl }}
                 style={[
                   {
                     alignSelf:
@@ -258,7 +265,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
                   // senderId == currentUserId ? 'flex-end' : 'flex-start',
                 },
               ]}>
-              {attachments.fileName}
+              {getTrimTitle(attachments?.fileName ?? '', 20)}
             </Text>
           </View>
         </TouchableOpacity>
@@ -386,7 +393,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
           </Text>
         </View>
 
-        <View
+        {/* <View
           style={{
             borderRadius: 100,
             paddingVertical: 5,
@@ -395,12 +402,13 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
             alignSelf: 'flex-start',
             alignItems: 'center',
             gap: 5,
+            backgroundColor: 'red',
           }}>
           {item?.reactions?.length > 0 &&
             item?.reactions?.map((item: any) => {
-              return <Text style={{fontSize: 12}}>{item?.emoji}</Text>;
+              return <Text style={{ fontSize: 12 }}>{item?.emoji}</Text>;
             })}
-        </View>
+        </View> */}
       </>
     );
   };
@@ -523,7 +531,7 @@ const MessageItemComponent = ({props}: MessageItemComponentProps) => {
   };
 
   return (
-    <View style={{flex: 1, marginBottom: 4}}>
+    <View style={{ flex: 1, marginBottom: 4 }}>
       {item?.attachments?.length > 0
         ? renderContentByType()
         : checkIsURLText(item?.content)
